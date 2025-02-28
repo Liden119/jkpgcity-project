@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Baskervville:ital@0;1&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Sahitya:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="topbar-container">
+        <h2 id="welcome-message">Välkommen, Gäst!</h2>
+
+        <div class="topbar-options">
+        <a href="/register" id="topbar-register">Register</a>
+        <a href="/login" id="topbar-login">Log in</a>
+        <a href="/logout" id="topbar-logout">Log out</a>
+    </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="hero-container">
+        <img src="/img/heroImage.jpg" alt="Hero Image" class="hero-image">
+        <div class="hero-text-box">
+            <h1 class="hero-text-header">VÄLKOMMEN TILL JÖNKÖPING CITY</h1>
+            <p class="hero-text-paragraph">
+                Upplev hösten i vår mysiga stadskärna! Jönköping City är fyllt av butiker, 
+                kultur, upplevelser, caféer och restauranger som ramas in av lummiga grönområden och vackra sjöar.
+            </p>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="content-container">
+        <div class="top-content-line"></div>
+        <div class="top-section-container">
+            <h1 class="top-section-header">Utforska</h1>
+        </div>
+            
+
+
+        <div class="section-container">
+            
+       
+
+
+            <!-- Formulär för att lägga till en butik -->
+            <div id="add-store-form-container" style="display: none;">
+                <h3>Lägg till en butik</h3>
+                <form action="/add-store" method="POST">
+                    <label for="store-name">Butikens namn:</label>
+                    <input type="text" id="store-name" name="name" required><br>
+                  
+                    <label for="store-district">Distrikt:</label>
+                    <input type="text" id="store-district" name="district" required><br>
+                  
+                    <label for="store-url">URL:</label>
+                    <input type="url" id="store-url" name="url" required><br>
+                  
+                    <button type="submit">Lägg till butik</button>
+                  </form>
+                  
+            </div>
+
+            <div class="stores-container">
+                <div id="stores-list"></div> <!-- Här kommer vi att lägga till butikerna -->
+            </div>
+            
+            
+        </div>
+    </div>
+</body>
+</html>
