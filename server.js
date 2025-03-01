@@ -171,8 +171,8 @@ async function startServer() {
         console.log('Connected to PostgreSQL database');
         
         // Starta servern när anslutningen är etablerad
-        app.listen(3001, () => {
-            console.log('Server listening on port 3001!');
+        app.listen(3002, () => {
+            console.log('Server listening on port 3002!');
         });
 
     } catch (err) {
