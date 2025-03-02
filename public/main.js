@@ -27,7 +27,7 @@ async function checkSession() {
 // Hämtar alla butiker och uppdaterar sidan
 async function fetchStores(query = '') {
     try {
-        const response = await fetch(`/stores${query}`);
+        const response = await fetch(`/api/stores${query}`);
         const stores = await response.json();
         const storesListContainer = document.getElementById("stores-list");
 

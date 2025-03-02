@@ -21,7 +21,7 @@ async function connectDB() {
 }
 
 // Den här funktionen skapar användartabellen om den inte redan finns
-function createTable() {
+function createUserTable() {
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
@@ -71,13 +71,14 @@ async function importStoresData() {
 
             for (const store of storesData) {
                 const query = `
-                    INSERT INTO stores (name, url, district)
-                    VALUES ($1, $2, $3)
+                    INSERT INTO stores (name, url, district, category)
+                    VALUES ($1, $2, $3, $4)
                 `;
                 await client.query(query, [
                     store.name,
                     store.url,
-                    store.district
+                    store.district,
+                    store.category
                 ]);
             }
             console.log('Stores data imported successfully');
@@ -90,42 +91,8 @@ async function importStoresData() {
     }
 }
 
-async function getAllStores() {
-    try {
-        const query = 'SELECT * FROM stores ORDER BY name';
-        const { rows } = await client.query(query);
-        return rows;
-    } catch (err) {
-        console.error('Error fetching stores:', err.stack);
-        throw err;
-    }
-}
 
-async function insertRecord(insertValues){
-    const insertQuery=`
-INSERT INTO stores (name, url, district, category)
-VALUES ($1, $2, $3, $4)
-RETURNING *;
-`;
-client.query(insertQuery, insertValues)
-.then(res => console.log('Inserted record:', res.rows[0]))
-.catch(err => console.error('Error inserting record', err.stack));
-}
-
-function updateStores(updateValues) {
-    const updateQuery = `
-    UPDATE stores
-    SET name = $1, url = $2, district = $3, category = $4
-    WHERE id = $5
-    RETURNING *;
-    `;
-    client.query(updateQuery, updateValues)
-    .then(res => console.log('Updated record:', res.rows[0]))
-    .catch(err => console.error('Error updating record', err.stack));
-    }
-
-
-createTable();
+createUserTable();
 createStoresTable();
 importStoresData();
 
