@@ -74,12 +74,13 @@
         </div>
        
 
+        
 
 
             <div class="stores-container">
                 <div id="stores-list"></div> <!-- Här kommer vi att lägga till butikerna -->
                  <!-- Formulär för att lägga till en butik -->
-            <div id="add-store-form-container" style="display: none;">
+            <div id="add-store-form-container" class="store-item" style="display: none;">
                 <h3>Lägg till en butik</h3>
                 <form action="/add-store" method="POST">
                     <label for="store-name">Butikens namn:</label>
@@ -96,10 +97,21 @@
                   
                     <button type="submit">Lägg till butik</button>
                   </form>
-                  
             </div>
+
+
+
+
             </div>
-            
+
+            <!-- <div class="store-item">
+                <h3>${store.name}</h3>
+                <p>District: ${store.district}</p>
+                <p>Category: ${store.category}</p>
+                <a href="${store.url}" target="_blank" class="visit-button">Läs mer</a>
+                ${storeControls(store)}
+            </div>
+             -->
     </div>
 </body>
 </html>

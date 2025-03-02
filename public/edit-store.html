@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redigera Butik</title>
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="/main.css">
     <script src="/edit-store.js"></script>
 
 </head>
 <body>
+    <div class="edit-container">
     <h1>Redigera Butik</h1>
     <form id="edit-form">
         <label for="name">Namn:</label>
@@ -25,5 +26,11 @@
 
         <button type="submit">Spara ändringar</button>
     </form>
+
+    <h2>Ta Bort Butiken</h2>
+    <form id="delete-form">
+        <button type="submit" id="delete-button">Delete</button>
+   </form>
+</div>
 </body>
 </html>

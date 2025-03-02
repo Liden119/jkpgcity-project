@@ -48,9 +48,7 @@ async function fetchStores(query = '') {
 // Returnerar HTML för redigera/radera-knappar om användaren är inloggad
 function storeControls(store) {
     return document.getElementById('add-store-form-container').style.display === 'block' 
-        ? `<form method="POST" action="/delete-store/${store.id}">
-                <button type="submit">Delete</button>
-           </form>
+        ? `
            <a href="/edit-store/${store.id}" class="edit-button">Redigera butik</a>`
         : '';
 }
