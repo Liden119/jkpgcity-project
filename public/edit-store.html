@@ -19,10 +19,23 @@
         <input type="text" id="url" name="url" required><br><br>
 
         <label for="district">District:</label>
-        <input type="text" id="district" name="district" required><br><br>
+        <select id="district" name="district" required>
+            <option value="Öster">Öster</option>
+                    <option value="Väster">Väster</option>
+                    <option value="Tändsticksområdet">Tändsticksområdet</option>
+                    <option value="Atollen">Atollen</option>
+                    <option value="Resecentrum">Resecentrum</option>
+                <option value="Annat">Annat</option>
+        </select><br><br>
+
+
 
         <label for="category">Category:</label>
-        <input type="text" id="category" name="category" required><br><br>
+        <select id="category" name="category" required>
+            <option value="Test">Test</option>
+            <option value="test">test</option>
+            <option value="Annat">Annat</option>
+        </select><br><br>
 
         <button type="submit">Spara ändringar</button>
     </form>

@@ -37,7 +37,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (!response.ok) throw new Error(result.error || "Något gick fel");
 
-            alert("Butiken uppdaterades!");
             window.location.href = "/"; // Omdirigera till startsidan
 
         } catch (error) {
@@ -61,8 +60,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (!response.ok) throw new Error("Misslyckades att radera butiken");
 
-            alert("Butiken har raderats!");
-            window.location.href = "/"; // Omdirigera till startsidan
+            window.location.href = "/";
         } catch (error) {
             console.error("Error deleting store:", error);
             alert("Kunde inte radera butiken.");

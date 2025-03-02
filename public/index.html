@@ -53,6 +53,7 @@
                     <option value="">Alla</option>
                     <option value="Test">Test</option>
                     <option value="Test">test</option>
+                    <option value="Test">annat</option>
                 </select>
                 <label for="district">Distrikt:</label>
                 <select name="district" id="district">
@@ -66,11 +67,10 @@
                 </select>
 
                 <button type="submit">Sök</button>
-
             </form>
         </div>
             
-                
+        
             
         </div>
        
@@ -88,7 +88,14 @@
                     <input type="text" id="store-name" name="name" required><br>
                   
                     <label for="store-district">Distrikt:</label>
-                    <input type="text" id="store-district" name="district" required><br>
+                    <select id="store-district" name="district" required>
+                        <option value="Öster">Öster</option>
+                        <option value="Väster">Väster</option>
+                        <option value="Tändsticksområdet">Tändsticksområdet</option>
+                        <option value="Atollen">Atollen</option>
+                        <option value="Resecentrum">Resecentrum</option>
+                        <option value="Annat">Annat</option>
+                    </select><br><br>
 
                     <label for="store-category">Category:</label>
                     <input type="text" id="store-category" name="category" required><br>
@@ -104,15 +111,6 @@
 
 
             </div>
-
-            <!-- <div class="store-item">
-                <h3>${store.name}</h3>
-                <p>District: ${store.district}</p>
-                <p>Category: ${store.category}</p>
-                <a href="${store.url}" target="_blank" class="visit-button">Läs mer</a>
-                ${storeControls(store)}
-            </div>
-             -->
     </div>
 </body>
 </html>
