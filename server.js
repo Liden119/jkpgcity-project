@@ -196,8 +196,6 @@ app.post('/login', async (req, res) => {
 
 
 
-
-
 // Starta servern och anslut till databasen
 async function startServer() {
     try {

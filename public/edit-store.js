@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (!response.ok) throw new Error(result.error || "Något gick fel");
 
-            alert("Butiken uppdaterades! 🎉");
+            alert("Butiken uppdaterades!");
             window.location.href = "/"; // Omdirigera till startsidan
 
         } catch (error) {
