@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require("fs");
 const path = require("path");
-const { client, getAllStores } = require('./db'); // Importera client och getAllStores från db.js
+const { client } = require('./db'); // Importera client och getAllStores från db.js
 const app = express();
 const session = require('express-session');
 
@@ -19,13 +19,20 @@ app.use(session({
 }));
 
 app.get('/', (req, res) => {
-    // Hämta sessionens status
     const loggedIn = req.session.loggedIn || false; 
-
-    // Skicka inloggningsstatus till HTML via en JavaScript-variabel
     res.sendFile(path.join(__dirname, 'public', 'index.html'), {
         loggedIn: loggedIn
     });
+});
+
+app.get("/api/users", async (req,res) =>{
+    try {
+        const dbres = await client.query('SELECT * FROM users;');
+        console.log('All users:', dbres.rows);
+        res.json(dbres.rows);
+      } catch (err) {
+        console.error('Error', err.stack);
+      }
 });
 
 
@@ -35,9 +42,60 @@ app.get('/all', async (req, res) => {
     console.log('All users:', dbres.rows);
     res.json(dbres.rows);
   } catch (err) {
-    console.error('Error selecting records', err.stack);
+    console.error('Error', err.stack);
   }
 });
+
+
+
+/* ROUTEN FÖR ATT ÖPPNA HTML SIDAN FÖR EDIT AV EN STORE */
+app.get('/edit-store/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'edit-store.html'));
+});
+
+// API-rutt för att hämta butikens data
+app.get('/api/store/:id', async (req, res) => {
+    const storeId = req.params.id;
+
+    try {
+        const dbres = await client.query('SELECT * FROM stores WHERE id = $1', [storeId]);
+
+        if (dbres.rows.length === 0) {
+            return res.status(404).json({ error: "Butiken hittades inte." });
+        }
+
+        res.json(dbres.rows[0]);
+
+    } catch (err) {
+        console.error("Error", err.stack);
+        res.status(500).json({ error: "Något gick fel." });
+    }
+});
+
+app.put('/api/store/:id', async (req, res) => {
+    const storeId = req.params.id;
+    const { name, url, district, category } = req.body;
+
+    try {
+        const dbres = await client.query(
+            `UPDATE stores 
+             SET name = $1, url = $2, district = $3, category = $4 
+             WHERE id = $5 RETURNING *`,
+            [name, url, district, category, storeId]
+        );
+
+        if (dbres.rows.length === 0) {
+            return res.status(404).json({ error: "Butiken hittades inte." });
+        }
+
+        res.json({ message: "Butiken uppdaterades!", store: dbres.rows[0] });
+
+    } catch (err) {
+        console.error("Error", err.stack);
+        res.status(500).json({ error: "Något gick fel vid uppdatering." });
+    }
+});
+
 
 // Returnera sessionens 'loggedIn'-status
 app.get('/session-status', (req, res) => {
@@ -62,15 +120,36 @@ app.get("/api/stores", (req, res) => {
     });
 });
 
+
 app.get('/stores', async (req, res) => {
     try {
-        const stores = await getAllStores(); // Använd getAllStores från db.js
-        res.json(stores);
+        const { district, category } = req.query; // Hämta filtreringsparametrarna
+        let query = 'SELECT * FROM stores WHERE 1=1'; // Grundquery
+        let values = [];
+
+        // Lägg till filtrering för district
+        if (district && district !== '') {
+            query += ' AND district = $' + (values.length + 1);
+            values.push(district);
+        }
+
+        // Lägg till filtrering för category
+        if (category && category !== '') {
+            query += ' AND category = $' + (values.length + 1);
+            values.push(category);
+        }
+
+        // Lägg till ORDER BY för att säkerställa att butikerna är sorterade
+        query += ' ORDER BY id ASC'; // Sortera butikerna efter id i stigande ordning
+
+        const result = await client.query(query, values);
+        res.json(result.rows);
     } catch (err) {
         console.error('Error fetching stores:', err.stack);
         res.status(500).json({ error: 'Error fetching stores' });
     }
 });
+
 
 app.post('/add-store', async (req, res) => {
     const { name, district, url } = req.body;
@@ -171,8 +250,8 @@ async function startServer() {
         console.log('Connected to PostgreSQL database');
         
         // Starta servern när anslutningen är etablerad
-        app.listen(3002, () => {
-            console.log('Server listening on port 3002!');
+        app.listen(3000, () => {
+            console.log('Server listening on port 3000!');
         });
 
     } catch (err) {

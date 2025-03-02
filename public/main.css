@@ -128,44 +128,61 @@ h1, h2, h3, h4 {
     font-size: 40pt;
 }
 
-/* Containern för alla boxar med stores osv. */
-.section-container{
+.filter-container{
+    margin-top: -15px;
+}
+.filter-container h2{
+    opacity: 0.7;
+}
+
+
+#stores-list{
     display: flex;
     flex-wrap: wrap;
-    gap: 40px;
     padding: 100px;
+    padding-top: 30px;
+    gap: 20px;
 }
 
-
-
-.content-box{
+.store-item{
+    height: 200px;
+    width: 180px;
+    padding: 10px 20px 10px 20px ;
+    background-color: #141A22;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    display: inline-block;
     position: relative;
-    height: 300px;
-    width: 300px;
-    background-color: #DBCFB9;
+    color: white;
+    box-shadow: rgba(0, 0, 0, 0.411) 4px 4px 8px;
 }
-
-/*
-.content-box:hover{
-    cursor: pointer;
+.store-item h3{
+    font-size: 12pt;
+}
+.store-item p{
+    font-size: 10.5pt;
+}
+.visit-button{
+    color: #141A22;
+    background-color: white;
+    font-size: 11pt;
+    padding: 4px 8px 4px 8px;
+    border-radius: 3px;
+    text-decoration: none;
+    position: absolute;
+    right: 20px;
+    bottom: 10px;
+}
+.visit-button:hover{
     filter: brightness(80%);
 }
-    */
 
-.content-box{
 
-}
 
-.content-text-box{
-    padding-left: 20px;
-    padding-right: 20px;
-}
-.content-box-header{
-    font-size: 16pt;
-}
 .link-button{
     text-decoration: none;
-    color: #f4f4f4;
+    color: #f4f4f4e0;
     background-color: #141A22;
     font-size: 13pt;
     padding: 5px 10px 5px 10px;

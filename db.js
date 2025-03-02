@@ -44,7 +44,8 @@ async function createStoresTable() {
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             url TEXT,
-            district VARCHAR(100)
+            district VARCHAR(100),
+            category VARCHAR(100)
         );
     `;
     try {
@@ -55,7 +56,6 @@ async function createStoresTable() {
         throw err;
     }
 }
-
 async function importStoresData() {
     try {
         const checkQuery = 'SELECT COUNT(*) FROM stores';
@@ -101,11 +101,34 @@ async function getAllStores() {
     }
 }
 
+async function insertRecord(insertValues){
+    const insertQuery=`
+INSERT INTO stores (name, url, district, category)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+`;
+client.query(insertQuery, insertValues)
+.then(res => console.log('Inserted record:', res.rows[0]))
+.catch(err => console.error('Error inserting record', err.stack));
+}
+
+function updateStores(updateValues) {
+    const updateQuery = `
+    UPDATE stores
+    SET name = $1, url = $2, district = $3, category = $4
+    WHERE id = $5
+    RETURNING *;
+    `;
+    client.query(updateQuery, updateValues)
+    .then(res => console.log('Updated record:', res.rows[0]))
+    .catch(err => console.error('Error updating record', err.stack));
+    }
+
+
 createTable();
 createStoresTable();
 importStoresData();
 
 module.exports = {
-    client, // Exporterar databasklienten
-    getAllStores // Exporterar getAllStores-funktionen
+    client
 };
