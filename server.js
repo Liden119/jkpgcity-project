@@ -39,6 +39,10 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
 
 /* GET REQUEST TO GET DATA FROM DATABASE / SESSION */
 // används för att checka om man är loggedIn samt användarnamnet för uppe i vänstra hörnet
@@ -193,6 +197,25 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Serverfel vid inloggning.');
     }
 });
+
+//Post request för skapa en ny user, skickas via en form i bodyn med first_name, last_name, username osv. i bodyn
+app.post('/register', async (req, res) => {
+    const { first_name, last_name, username, password, email } = req.body;
+   
+    try {
+        const result = await client.query(
+            'INSERT INTO users (first_name, last_name, username, password, email) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [first_name, last_name, username, password, email]
+        );
+
+        console.log('User added:', result.rows[0]);
+        res.redirect('/');
+    } catch (err) {
+        console.error('Error adding User:', err.stack);
+        res.status(500).send('Kunde inte lägga till user.');
+    }
+});
+
 
 
 
