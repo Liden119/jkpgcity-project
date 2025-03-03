@@ -2,6 +2,7 @@ const express = require('express');
 const { client } = require('./db'); // Importera client och getAllStores från db.js
 const app = express();
 const session = require('express-session');
+const bcrypt = require('bcrypt');
 
 // Middleware för att läsa JSON i POST-förfrågningar
 app.use(express.json());
@@ -106,6 +107,37 @@ app.get('/', async (req, res) => {
 
                     <div class="top-section-container">
                         <h1 class="top-section-header">Affärer</h1>
+                        ${loggedIn ? `
+                            <div id="add-store-form-container" class="store-item">
+                                <h3>Lägg till en butik</h3>
+                                <form action="/add-store" method="POST">
+                                    <label for="store-name">Butikens namn:</label>
+                                    <input type="text" id="store-name" name="name" required><br>
+    
+                                    <label for="store-district">Distrikt:</label>
+                                    <select id="store-district" name="district" required>
+                                        <option value="Öster">Öster</option>
+                                        <option value="Väster">Väster</option>
+                                        <option value="Tändsticksområdet">Tändsticksområdet</option>
+                                        <option value="Atollen">Atollen</option>
+                                        <option value="Resecentrum">Resecentrum</option>
+                                        <option value="Annat">Annat</option>
+                                    </select><br>
+    
+                                    <label for="store-category">Kategori:</label>
+                                    <select id="store-category" name="category" required>
+                                        <option value="Test">Test</option>
+                                        <option value="test">test</option>
+                                        <option value="Annat">Annat</option>
+                                    </select><br>
+    
+                                    <label for="store-url">URL:</label>
+                                    <input type="url" id="store-url" name="url" required><br>
+    
+                                    <button type="submit">Lägg till butik</button>
+                                </form>
+                            </div>
+                        ` : ''}
                         <div class="filter-container">
                             <h2>Filtrera</h2>
                             <form id="filter-form" method="GET">
@@ -130,38 +162,6 @@ app.get('/', async (req, res) => {
                             </form>
                         </div>
                     </div>
-
-                    ${loggedIn ? `
-                        <div id="add-store-form-container" class="store-item">
-                            <h3>Lägg till en butik</h3>
-                            <form action="/add-store" method="POST">
-                                <label for="store-name">Butikens namn:</label>
-                                <input type="text" id="store-name" name="name" required><br>
-
-                                <label for="store-district">Distrikt:</label>
-                                <select id="store-district" name="district" required>
-                                    <option value="Öster">Öster</option>
-                                    <option value="Väster">Väster</option>
-                                    <option value="Tändsticksområdet">Tändsticksområdet</option>
-                                    <option value="Atollen">Atollen</option>
-                                    <option value="Resecentrum">Resecentrum</option>
-                                    <option value="Annat">Annat</option>
-                                </select><br>
-
-                                <label for="store-category">Kategori:</label>
-                                <select id="store-category" name="category" required>
-                                    <option value="Test">Test</option>
-                                    <option value="test">test</option>
-                                    <option value="Annat">Annat</option>
-                                </select><br>
-
-                                <label for="store-url">URL:</label>
-                                <input type="url" id="store-url" name="url" required><br>
-
-                                <button type="submit">Lägg till butik</button>
-                            </form>
-                        </div>
-                    ` : ''}
 
                     <div class="stores-container">
                         ${stores.map(store => `
@@ -342,6 +342,14 @@ app.get('/admin', async (req, res) => {
         return res.status(403).send('Du har inte tillgång till denna sida.');
     }
 
+    let admin;
+
+        if(req.session.role === "admin"){
+            admin = true;
+        } else{
+            admin = false;
+        }
+
     try {
         const result = await client.query('SELECT * FROM users');  // Hämta alla användare
         const users = result.rows;  // Alla användare från databasen
@@ -350,7 +358,7 @@ app.get('/admin', async (req, res) => {
         let userHtml = users.map(user => {
             return `
                 <div class="user-card">
-                    <h3>${user.username}</h3>
+                    <h3 ${user.role === 'admin' ? 'id="user-card-admin"' : ''}>${user.username}</h3>
                     <p><strong>Förnamn:</strong> ${user.first_name}</p>
                     <p><strong>Efternamn:</strong> ${user.last_name}</p>
                     <p><strong>Email:</strong> ${user.email}</p> 
@@ -485,7 +493,9 @@ app.post('/login', async (req, res) => {
         const user = result.rows[0];
 
         if (user) {
-            if (user.password === password) {
+            const comparePassword = await bcrypt.compare(password, user.password);
+
+            if (comparePassword) {
                 req.session.loggedIn = true;
                 req.session.username = username;
                 req.session.role = user.role;  // Sätt användarens roll i sessionen
@@ -509,9 +519,13 @@ app.post('/register', async (req, res) => {
     const role = 'user';
    
     try {
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+
         const result = await client.query(
             'INSERT INTO users (first_name, last_name, username, password, email, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [first_name, last_name, username, password, email, role]
+            [first_name, last_name, username, hashedPassword, email, role]
         );
 
         console.log('User added:', result.rows[0]);
@@ -568,13 +582,12 @@ app.post('/admin/update-password', async (req, res) => {
     const { userId, password } = req.body; 
 
     try {
-        // Hämta användarens användarnamn för att kontrollera om det är Liden119
-        const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         // Om användaren inte är Liden119, uppdatera rollen i databasen
         const result = await client.query(
             'UPDATE users SET password = $1 WHERE id = $2 RETURNING *',
-            [password, userId]
+            [hashedPassword, userId]
         );
 
         if (result.rowCount > 0) {
