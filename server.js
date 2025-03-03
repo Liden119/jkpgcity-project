@@ -79,7 +79,7 @@ app.get('/', async (req, res) => {
                     <img src="/img/logo_jkpgcity_white.png" alt="Logo" id="jkpglogo">
                     <h2 id="welcome-message">Välkommen, ${username}!</h2>
                     <div class="topbar-options">
-                    ${admin ? '<a href="/admin" id="topbar-admin">Admin Dashboard</a>' : ''}
+                    ${admin ? '<a href="/admin" id="topbar-admin">Admin Kontrollpanel</a>' : ''}
                         ${loggedIn ? `
                             <a href="/logout" id="topbar-logout">Logga ut</a>
                         ` : `
@@ -103,8 +103,9 @@ app.get('/', async (req, res) => {
 
                 <!-- Content Section -->
                 <div class="content-container">
+
                     <div class="top-section-container">
-                        <h1 class="top-section-header">Utforska</h1>
+                        <h1 class="top-section-header">Affärer</h1>
                         <div class="filter-container">
                             <h2>Filtrera</h2>
                             <form id="filter-form" method="GET">
@@ -128,18 +129,6 @@ app.get('/', async (req, res) => {
                                 <button type="submit">Sök</button>
                             </form>
                         </div>
-                    </div>
-
-                    <div class="stores-container">
-                        ${stores.map(store => `
-                            <div class="store-item">
-                                <h3>${store.name}</h3>
-                                <p>Distrikt: ${store.district}</p>
-                                <p>Kategori: ${store.category}</p>
-                                <a href="${store.url}" target="_blank" class="visit-button">Läs mer</a>
-                                ${loggedIn ? `<a href="/edit-store/${store.id}" class="edit-button">Redigera butik</a>` : ''}
-                            </div>
-                        `).join('')}
                     </div>
 
                     ${loggedIn ? `
@@ -173,6 +162,19 @@ app.get('/', async (req, res) => {
                             </form>
                         </div>
                     ` : ''}
+
+                    <div class="stores-container">
+                        ${stores.map(store => `
+                            <div class="store-item">
+                                <h3>${store.name}</h3>
+                                <p>Distrikt: ${store.district}</p>
+                                <p>Kategori: ${store.category}</p>
+                                <a href="${store.url}" target="_blank" class="visit-button">Läs mer</a>
+                                ${admin ? `<a href="/edit-store/${store.id}" class="edit-button">Redigera butik</a>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+
                 </div>
             </body>
             </html>
@@ -184,10 +186,22 @@ app.get('/', async (req, res) => {
 });
 
 
-
 // Edit av butikers display av html, samt en check av inlogg eller ej (nekas om inte inloggad)
 app.get('/edit-store/:storeId', async (req, res) => {
+
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+
     const storeId = req.params.storeId;
+
+    let admin;
+
+        if(req.session.role === "admin"){
+            admin = true;
+        } else{
+            admin = false;
+        }
 
     try {
         // Hämta butikens info från databasen
@@ -209,7 +223,7 @@ app.get('/edit-store/:storeId', async (req, res) => {
                 <link rel="stylesheet" href="/main.css">
             </head>
             <body>
-                <div class="edit-container">
+                <div class="otherPages-container">
                     <h1>Redigera Butik</h1>
                     <form id="edit-form" action="/api/store/${storeId}" method="POST">
                         <label for="name">Namn:</label>
@@ -265,7 +279,7 @@ app.get('/login', (req, res) => {
             <link rel="stylesheet" href="/main.css">
         </head>
         <body>
-            <div class="login-container">
+            <div class="otherPages-container">
                 <h2>Logga in</h2>
                 <form action="/login" method="POST">
                     <label for="username">Användarnamn:</label>
@@ -295,7 +309,7 @@ app.get('/register', (req, res) => {
             <link rel="stylesheet" href="/main.css">
         </head>
         <body>
-            <div class="register-container">
+            <div class="otherPages-container">
                 <h2>Register</h2>
                 <form action="/register" method="POST">
                     <label for="first_name">Förnamn:</label>
@@ -372,10 +386,12 @@ app.get('/admin', async (req, res) => {
                 <link rel="stylesheet" href="/main.css">
             </head>
             <body>
+            <div class="otherPages-container"> 
                 <h1>Admin Dashboard</h1>
                 <h2>Alla användare</h2>
                 <div class="user-list">
                     ${userHtml}
+                </div>
                 </div>
             </body>
             </html>
@@ -486,6 +502,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
+
 //Post request för skapa en ny user, skickas via en form i bodyn med first_name, last_name, username osv. i bodyn
 app.post('/register', async (req, res) => {
     const { first_name, last_name, username, password, email } = req.body;
@@ -542,6 +559,7 @@ app.post('/admin/update-role', async (req, res) => {
     }
 });
 
+
 app.post('/admin/update-password', async (req, res) => {
     if (req.session.role !== 'admin') {
         return res.status(403).send('Du har inte tillgång till denna sida.');
@@ -570,7 +588,6 @@ app.post('/admin/update-password', async (req, res) => {
         res.status(500).send('Det gick inte att uppdatera lösenordet.');
     }
 });
-
 
 
 app.use(express.static("public"));
