@@ -121,14 +121,25 @@ app.get('/', async (req, res) => {
                                         <option value="Tändsticksområdet">Tändsticksområdet</option>
                                         <option value="Atollen">Atollen</option>
                                         <option value="Resecentrum">Resecentrum</option>
-                                        <option value="Annat">Annat</option>
+                                        <option value="Annat" selected>Annat</option>
                                     </select><br>
     
                                     <label for="store-category">Kategori:</label>
                                     <select id="store-category" name="category" required>
-                                        <option value="Test">Test</option>
-                                        <option value="test">test</option>
-                                        <option value="Annat">Annat</option>
+                                        <option value="kläder">Kläder & Accessoarer</option>
+                                        <option value="hälsa">Hälsa</option>
+                                        <option value="sportFritid">Sport & Fritid</option>
+                                        <option value="livsmedel">Livsmedel</option>
+                                        <option value="hemInredning">Hem & Inredning</option>
+                                        <option value="kultur">Kultur</option>
+                                        <option value="elektronik">Elektronik</option>
+                                        <option value="blommorVäxter">Blommor & Växter</option>
+                                        <option value="secondHand">Second Hand</option>
+                                        <option value="resorBiljetter">Resor & Biljetter</option>
+                                        <option value="tjänster">Tjänster</option>
+                                        <option value="spelTobak">Spel & Tobak</option>
+                                        <option value="ekonomi">Ekonomi</option>
+                                        <option value="övrigt" selected>Övrigt</option>
                                     </select><br>
     
                                     <label for="store-url">URL:</label>
@@ -144,9 +155,20 @@ app.get('/', async (req, res) => {
                                 <label for="category">Kategori:</label>
                                 <select name="category" id="category">
                                     <option value="">Alla</option>
-                                    <option value="Test" ${category === "Test" ? "selected" : ""}>Test</option>
-                                    <option value="test" ${category === "test" ? "selected" : ""}>test</option>
-                                    <option value="Annat" ${category === "Annat" ? "selected" : ""}>Annat</option>
+                                    <option value="kläder" ${category === "kläder" ? "selected" : ""}>Kläder & Accessoarer</option>
+                                    <option value="hälsa" ${category === "hälsa" ? "selected" : ""}>Hälsa</option>
+                                    <option value="sportFritid" ${category === "sportFritid" ? "selected" : ""}>Sport & Fritid</option>
+                                    <option value="livsmedel" ${category === "livsmedel" ? "selected" : ""}>Livsmedel</option>
+                                    <option value="hemInredning" ${category === "hemInredning" ? "selected" : ""}>Hem & Inredning</option>
+                                    <option value="kultur" ${category === "kultur" ? "selected" : ""}>Kultur</option>
+                                    <option value="elektronik" ${category === "elektronik" ? "selected" : ""}>Elektronik</option>
+                                    <option value="blommorVäxter" ${category === "blommorVäxter" ? "selected" : ""}>Blommor & Växter</option>
+                                    <option value="secondHand" ${category === "secondHand" ? "selected" : ""}>Second Hand</option>
+                                    <option value="resorBiljetter" ${category === "resorBiljetter" ? "selected" : ""}>Resor & Biljetter</option>
+                                    <option value="tjänster" ${category === "tjänster" ? "selected" : ""}>Tjänster</option>
+                                    <option value="spelTobak" ${category === "spelTobak" ? "selected" : ""}>Spel & Tobak</option>
+                                    <option value="ekonomi" ${category === "ekonomi" ? "selected" : ""}>Ekonomi</option>
+                                    <option value="övrigt" ${category === "övrigt" ? "selected" : ""}>Övrigt</option>
                                 </select>
                                 <label for="district">Distrikt:</label>
                                 <select name="district" id="district">
@@ -169,7 +191,7 @@ app.get('/', async (req, res) => {
                                 <h3>${store.name}</h3>
                                 <p>Distrikt: ${store.district}</p>
                                 <p>Kategori: ${store.category}</p>
-                                <a href="${store.url}" target="_blank" class="visit-button">Läs mer</a>
+                                <a href="https://${store.url}" target="_blank" class="visit-button">Läs mer</a>
                                 ${admin ? `<a href="/edit-store/${store.id}" class="edit-button">Redigera butik</a>` : ''}
                             </div>
                         `).join('')}
@@ -229,7 +251,7 @@ app.get('/edit-store/:storeId', async (req, res) => {
                         <label for="name">Namn:</label>
                         <input type="text" id="name" name="name" value="${store.name}"><br><br>
 
-                        <label for="url">URL:</label>
+                        <label for="url">URL: https://</label>
                         <input type="text" id="url" name="url" value="${store.url}"><br><br>
 
                         <label for="district">District:</label>
@@ -244,9 +266,20 @@ app.get('/edit-store/:storeId', async (req, res) => {
 
                         <label for="category">Category:</label>
                         <select id="category" name="category">
-                            <option value="Test" ${store.category === "Test" ? "selected" : ""}>Test</option>
-                            <option value="test" ${store.category === "test" ? "selected" : ""}>test</option>
-                            <option value="Annat" ${store.category === "Annat" ? "selected" : ""}>Annat</option>
+                            <option value="kläder" ${store.category === "kläder" ? "selected" : ""}>Kläder & Accessoarer</option>
+                            <option value="hälsa" ${store.category === "hälsa" ? "selected" : ""}>Hälsa</option>
+                            <option value="sportFritid" ${store.category === "sportFritid" ? "selected" : ""}>Sport & Fritid</option>
+                            <option value="livsmedel" ${store.category === "livsmedel" ? "selected" : ""}>Livsmedel</option>
+                            <option value="hemInredning" ${store.category === "hemInredning" ? "selected" : ""}>Hem & Inredning</option>
+                            <option value="kultur" ${store.category === "kultur" ? "selected" : ""}>Kultur</option>
+                            <option value="elektronik" ${store.category === "elektronik" ? "selected" : ""}>Elektronik</option>
+                            <option value="blommorVäxter" ${store.category === "blommorVäxter" ? "selected" : ""}>Blommor & Växter</option>
+                            <option value="secondHand" ${store.category === "secondHand" ? "selected" : ""}>Second Hand</option>
+                            <option value="resorBiljetter" ${store.category === "resorBiljetter" ? "selected" : ""}>Resor & Biljetter</option>
+                            <option value="tjänster" ${store.category === "tjänster" ? "selected" : ""}>Tjänster</option>
+                            <option value="spelTobak" ${store.category === "spelTobak" ? "selected" : ""}>Spel & Tobak</option>
+                            <option value="ekonomi" ${store.category === "ekonomi" ? "selected" : ""}>Ekonomi</option>
+                            <option value="övrigt" ${store.category === "övrigt" ? "selected" : ""}>Övrigt</option>
                         </select><br><br>
 
                         <button type="submit">Spara ändringar</button>
@@ -354,6 +387,17 @@ app.get('/admin', async (req, res) => {
         const result = await client.query('SELECT * FROM users');  // Hämta alla användare
         const users = result.rows;  // Alla användare från databasen
 
+        // Sortera användarna så att admin kommer först
+        users.sort((a, b) => {
+            if (a.role === 'admin' && b.role !== 'admin') {
+                return -1;  // Sätt 'admin' före 'user'
+            }
+            if (a.role !== 'admin' && b.role === 'admin') {
+                return 1;  // Sätt 'user' efter 'admin'
+            }
+            return 0;  // Om båda har samma roll, behåll ordningen
+        });
+
         // Bygg HTML-strukturen för att visa användarna
         let userHtml = users.map(user => {
             return `
@@ -365,7 +409,7 @@ app.get('/admin', async (req, res) => {
                     <p><strong>Roll:</strong> ${user.role}</p>
                      <form action="/admin/update-role" method="POST">
                         <input type="hidden" name="userId" value="${user.id}">
-                        <label for="role">Roll:</label><br>
+                        <label for="role">Ändra Roll:</label><br>
                         <select name="role" id="role">
                             <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
@@ -375,9 +419,15 @@ app.get('/admin', async (req, res) => {
 
                     <form action="/admin/update-password" method="POST">
                         <input type="hidden" name="userId" value="${user.id}">
-                        <label for="role">Nytt Lösenord:</label>
-                        <input type="text" id="password" name="password" value="">
+                        <label for="password">Ändra Lösenord:</label><br>
+                        <input type="text" id="password" name="password" value=""><br>
                         <button type="submit">Ändra Lösenord</button>
+                    </form><br>
+
+                    <form action="/admin/delete-user" method="POST">
+                        <input type="hidden" name="userId" value="${user.id}">
+                        <label for="delete">Radera användare</label><br>
+                        <button type="submit" id="delete-button" style="${user.username === 'Liden119' ? 'display: none;' : ''}">Ta bort användare</button>
                     </form>
                 </div>
             `;
@@ -390,12 +440,12 @@ app.get('/admin', async (req, res) => {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Admin Dashboard</title>
+                <title>Admin Kontrollpanel</title>
                 <link rel="stylesheet" href="/main.css">
             </head>
             <body>
             <div class="otherPages-container"> 
-                <h1>Admin Dashboard</h1>
+                <h1>Admin Kontrollpanel</h1>
                 <h2>Alla användare</h2>
                 <div class="user-list">
                     ${userHtml}
@@ -537,7 +587,6 @@ app.post('/register', async (req, res) => {
 });
 
 
-
 app.post('/admin/update-role', async (req, res) => {
     if (req.session.role !== 'admin') {
         return res.status(403).send('Du har inte tillgång till denna sida.');
@@ -601,6 +650,39 @@ app.post('/admin/update-password', async (req, res) => {
         res.status(500).send('Det gick inte att uppdatera lösenordet.');
     }
 });
+
+
+app.post('/admin/delete-user', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+
+    const { userId } = req.body;  // Hämta användarens ID från formuläret
+
+    try {
+        // Förhindra borttagning av användaren "Liden119"
+        const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const user = userResult.rows[0];
+
+        if (user && user.username === 'Liden119') {
+            return res.status(400).send('Du kan inte ta bort användaren Liden119.');
+        }
+
+        // Ta bort användaren från databasen
+        const result = await client.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId]);
+
+        if (result.rowCount > 0) {
+            // Om användaren togs bort, skicka tillbaka till admin-panelen
+            res.redirect('/admin');
+        } else {
+            res.status(400).send('Kunde inte ta bort användaren.');
+        }
+    } catch (err) {
+        console.error('Error deleting user', err.stack);
+        res.status(500).send('Det gick inte att ta bort användaren.');
+    }
+});
+
 
 
 app.use(express.static("public"));
