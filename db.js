@@ -29,7 +29,8 @@ function createUserTable() {
       last_name VARCHAR(50),
       username VARCHAR(100) UNIQUE,
       password VARCHAR(255),
-      email VARCHAR(100) UNIQUE
+      email VARCHAR(100) UNIQUE,
+      role VARCHAR(50)
     );
   `;
   

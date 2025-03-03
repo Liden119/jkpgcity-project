@@ -27,20 +27,138 @@ app.get('/', (req, res) => {
 });
 
 // Edit av butikers display av html, samt en check av inlogg eller ej (nekas om inte inloggad)
-app.get('/edit-store/:id', (req, res) => {
-    const loggedIn = req.session.loggedIn || false; 
-    if(loggedIn){
-    res.sendFile(path.join(__dirname, 'public', 'edit-store.html'));
+app.get('/edit-store/:storeId', async (req, res) => {
+    const storeId = req.params.storeId;
+
+    try {
+        // Hämta butikens info från databasen
+        const dbres = await client.query('SELECT * FROM stores WHERE id = $1', [storeId]);
+        const store = dbres.rows[0];
+
+        if (!store) {
+            return res.status(404).send("Butiken hittades inte");
+        }
+
+        // Skicka dynamisk HTML
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="sv">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Redigera Butik</title>
+                <link rel="stylesheet" href="/main.css">
+            </head>
+            <body>
+                <div class="edit-container">
+                    <h1>Redigera Butik</h1>
+                    <form id="edit-form" action="/api/store/${storeId}" method="POST">
+                        <label for="name">Namn:</label>
+                        <input type="text" id="name" name="name" value="${store.name}"><br><br>
+
+                        <label for="url">URL:</label>
+                        <input type="text" id="url" name="url" value="${store.url}"><br><br>
+
+                        <label for="district">District:</label>
+                        <select id="district" name="district">
+                            <option value="Öster" ${store.district === "Öster" ? "selected" : ""}>Öster</option>
+                            <option value="Väster" ${store.district === "Väster" ? "selected" : ""}>Väster</option>
+                            <option value="Tändsticksområdet" ${store.district === "Tändsticksområdet" ? "selected" : ""}>Tändsticksområdet</option>
+                            <option value="Atollen" ${store.district === "Atollen" ? "selected" : ""}>Atollen</option>
+                            <option value="Resecentrum" ${store.district === "Resecentrum" ? "selected" : ""}>Resecentrum</option>
+                            <option value="Annat" ${store.district === "Annat" ? "selected" : ""}>Annat</option>
+                        </select><br><br>
+
+                        <label for="category">Category:</label>
+                        <select id="category" name="category">
+                            <option value="Test" ${store.category === "Test" ? "selected" : ""}>Test</option>
+                            <option value="test" ${store.category === "test" ? "selected" : ""}>test</option>
+                            <option value="Annat" ${store.category === "Annat" ? "selected" : ""}>Annat</option>
+                        </select><br><br>
+
+                        <button type="submit">Spara ändringar</button>
+                    </form>
+
+                    <h2>Ta Bort Butiken</h2>
+                    <form id="delete-form" action="/delete-store/${storeId}" method="POST">
+                        <button type="submit" id="delete-button">Delete</button>
+                    </form>
+                </div>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        console.error("Fel vid hämtning av butik:", error);
+        res.status(500).send("Försök igen senare.");
     }
 });
 
+
 //Login formulärets display av html
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Login</title>
+        </head>
+        <body>
+            <div class="login-container">
+                <h2>Logga in</h2>
+                <form action="/login" method="POST">
+                    <label for="username">Användarnamn:</label>
+                    <input type="text" id="username" name="username" required>
+
+                    <label for="password">Lösenord:</label>
+                    <input type="password" id="password" name="password" required>
+
+                    <button type="submit">Logga in</button>
+                </form>
+                <p id="loginError" style="color: red; display: none;">Felaktigt användarnamn eller lösenord.</p>
+                <p>Har du inget konto? <a href="/register">Registrera dig här</a></p>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Register</title>
+        </head>
+        <body>
+            <div class="register-container">
+                <h2>Register</h2>
+                <form action="/register" method="POST">
+                    <label for="first_name">Förnamn:</label>
+                    <input type="text" id="first_name" name="first_name" required>
+
+                    <label for="last_name">Efternamn:</label>
+                    <input type="text" id="last_name" name="last_name" required>
+
+                    <label for="email">Email:</label>
+                    <input type="text" id="email" name="email" required>
+
+                    <label for="username">Användarnamn:</label>
+                    <input type="text" id="username" name="username" required>
+
+                    <label for="password">Lösenord:</label>
+                    <input type="password" id="password" name="password" required>
+
+                    <button type="submit">Registrera</button>
+                </form>
+                <p>Redan registrerad? <a href="/login">Logga in här</a></p>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 
@@ -113,22 +231,22 @@ app.get('/logout', (req, res) => {
 });
 
 
-/* PUT REQUEST TO UPDATE DATA */
+/* POST REQUEST TO UPDATE DATA */
 // används för att i databasen (via query'n + req.body) uppdatera data av stores (exempelvis namn, url osv.)
-app.put('/api/store/:id', async (req, res) => {
+app.post('/api/store/:id', async (req, res) => {
     const storeId = req.params.id;
     const { name, url, district, category } = req.body;
     try {
         const dbres = await client.query(
             `UPDATE stores 
-             SET name = $1, url = $2, district = $3, category = $4 
+             SET name = $1, url = $2, district = $3, category = $4
              WHERE id = $5 RETURNING *`,
             [name, url, district, category, storeId]
         );
         if (dbres.rows.length === 0) {
             return res.status(404).json({ error: "Butiken hittades inte." });
         }
-        res.json({ message: "Butiken uppdaterades!", store: dbres.rows[0] });
+        res.redirect("/");
     } catch (err) {
         console.error("Error", err.stack);
         res.status(500).json({ error: "Något gick fel vid uppdatering." });
@@ -201,11 +319,12 @@ app.post('/login', async (req, res) => {
 //Post request för skapa en ny user, skickas via en form i bodyn med first_name, last_name, username osv. i bodyn
 app.post('/register', async (req, res) => {
     const { first_name, last_name, username, password, email } = req.body;
+    const role = "user";
    
     try {
         const result = await client.query(
-            'INSERT INTO users (first_name, last_name, username, password, email) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [first_name, last_name, username, password, email]
+            'INSERT INTO users (first_name, last_name, username, password, email, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [first_name, last_name, username, password, email, role]
         );
 
         console.log('User added:', result.rows[0]);
