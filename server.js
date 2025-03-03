@@ -6,7 +6,6 @@ const app = express();
 const session = require('express-session');
 
 // Middleware för att läsa JSON i POST-förfrågningar
-app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -21,10 +20,157 @@ app.use(session({
 
 /* GET REQUESTS THAT SERVES HTML FILES: */
 // --------------------------------------
-//Start sidans display av html samt kollar inlogg eller ej
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/', async (req, res) => {
+    try {
+        // Hämta kategori och distrikt från query-parametrar
+        const { category, district } = req.query;
+
+        // Bygg SQL-frågan baserat på de valda filtren
+        let query = 'SELECT * FROM stores WHERE 1=1'; // Starta med en grundläggande SELECT
+
+        const values = []; // Skapa en array för att lagra parametrarna som vi skickar till SQL
+
+        // Om kategori är vald, lägg till den i frågan och lägg till värdet i values-arrayen
+        if (category) {
+            query += ` AND category = $${values.length + 1}`;
+            values.push(category);
+        }
+
+        // Om distrikt är valt, lägg till det i frågan och lägg till värdet i values-arrayen
+        if (district) {
+            query += ` AND district = $${values.length + 1}`;
+            values.push(district);
+        }
+
+        // Hämta butiker från databasen med den uppdaterade SQL-frågan och parametrarna
+        const result = await client.query(query, values);
+        const stores = result.rows;
+
+
+        // Kontrollera om användaren är inloggad
+        const loggedIn = req.session.loggedIn || false;
+        const username = req.session.username || 'Gäst';
+
+        // Skapa dynamisk HTML
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="sv">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Project</title>
+                <link rel="stylesheet" href="/main.css">
+            </head>
+            <body>
+                <!-- Top Bar -->
+                <div class="topbar-container">
+                    <img src="/img/logo_jkpgcity_white.png" alt="Logo" id="jkpglogo">
+                    <h2 id="welcome-message">Välkommen, ${username}!</h2>
+                    <div class="topbar-options">
+                        ${loggedIn ? `
+                            <a href="/logout" id="topbar-logout">Logga ut</a>
+                        ` : `
+                            <a href="/register" id="topbar-register">Registrera</a>
+                            <a href="/login" id="topbar-login">Logga in</a>
+                        `}
+                    </div>
+                </div>
+
+                <!-- Hero Section -->
+                <div class="hero-container">
+                    <img src="/img/heroImage.jpg" alt="Hero Image" class="hero-image">
+                    <div class="hero-text-box">
+                        <h1 class="hero-text-header">VÄLKOMMEN TILL JÖNKÖPING CITY</h1>
+                        <p class="hero-text-paragraph">
+                            Upplev hösten i vår mysiga stadskärna! Jönköping City är fyllt av butiker, 
+                            kultur, upplevelser, caféer och restauranger som ramas in av lummiga grönområden och vackra sjöar.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div class="content-container">
+                    <div class="top-section-container">
+                        <h1 class="top-section-header">Utforska</h1>
+                        <div class="filter-container">
+                            <h2>Filtrera</h2>
+                            <form id="filter-form" method="GET">
+                                <label for="category">Kategori:</label>
+                                <select name="category" id="category">
+                                    <option value="">Alla</option>
+                                    <option value="Test" ${category === "Test" ? "selected" : ""}>Test</option>
+                                    <option value="test" ${category === "test" ? "selected" : ""}>test</option>
+                                    <option value="Annat" ${category === "Annat" ? "selected" : ""}>Annat</option>
+                                </select>
+                                <label for="district">Distrikt:</label>
+                                <select name="district" id="district">
+                                    <option value="">Alla</option>
+                                    <option value="Öster" ${district === "Öster" ? "selected" : ""}>Öster</option>
+                                    <option value="Väster" ${district === "Väster" ? "selected" : ""}>Väster</option>
+                                    <option value="Tändsticksområdet" ${district === "Tändsticksområdet" ? "selected" : ""}>Tändsticksområdet</option>
+                                    <option value="Atollen" ${district === "Atollen" ? "selected" : ""}>Atollen</option>
+                                    <option value="Resecentrum" ${district === "Resecentrum" ? "selected" : ""}>Resecentrum</option>
+                                    <option value="Annat" ${district === "Annat" ? "selected" : ""}>Annat</option>
+                                </select>
+                                <button type="submit">Sök</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="stores-container">
+                        ${stores.map(store => `
+                            <div class="store-item">
+                                <h3>${store.name}</h3>
+                                <p>Distrikt: ${store.district}</p>
+                                <p>Kategori: ${store.category}</p>
+                                <a href="${store.url}" target="_blank" class="visit-button">Läs mer</a>
+                                ${loggedIn ? `<a href="/edit-store/${store.id}" class="edit-button">Redigera butik</a>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    ${loggedIn ? `
+                        <div id="add-store-form-container" class="store-item">
+                            <h3>Lägg till en butik</h3>
+                            <form action="/add-store" method="POST">
+                                <label for="store-name">Butikens namn:</label>
+                                <input type="text" id="store-name" name="name" required><br>
+
+                                <label for="store-district">Distrikt:</label>
+                                <select id="store-district" name="district" required>
+                                    <option value="Öster">Öster</option>
+                                    <option value="Väster">Väster</option>
+                                    <option value="Tändsticksområdet">Tändsticksområdet</option>
+                                    <option value="Atollen">Atollen</option>
+                                    <option value="Resecentrum">Resecentrum</option>
+                                    <option value="Annat">Annat</option>
+                                </select><br>
+
+                                <label for="store-category">Kategori:</label>
+                                <select id="store-category" name="category" required>
+                                    <option value="Test">Test</option>
+                                    <option value="test">test</option>
+                                    <option value="Annat">Annat</option>
+                                </select><br>
+
+                                <label for="store-url">URL:</label>
+                                <input type="url" id="store-url" name="url" required><br>
+
+                                <button type="submit">Lägg till butik</button>
+                            </form>
+                        </div>
+                    ` : ''}
+                </div>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        console.error("Error fetching stores:", error);
+        res.status(500).send("Något gick fel vid hämtning av butiker.");
+    }    
 });
+
+
 
 // Edit av butikers display av html, samt en check av inlogg eller ej (nekas om inte inloggad)
 app.get('/edit-store/:storeId', async (req, res) => {
@@ -201,24 +347,6 @@ app.get('/api/stores', async (req, res) => {
     }
 });
 
-// Används vid edit av en store, för få nuvarande info om storen man ändrar
-app.get('/api/store/:id', async (req, res) => {
-    const storeId = req.params.id;
-
-    try {
-        const dbres = await client.query('SELECT * FROM stores WHERE id = $1', [storeId]);
-
-        if (dbres.rows.length === 0) {
-            return res.status(404).json({ error: "Butiken hittades inte." });
-        }
-
-        res.json(dbres.rows[0]);
-
-    } catch (err) {
-        console.error("Error", err.stack);
-        res.status(500).json({ error: "Något gick fel." });
-    }
-});
 
 //Används för "destroya" session så man loggas ut, och då försvinner även req.session.loggedIn (Vilket gör den false)
 app.get('/logout', (req, res) => {
@@ -319,7 +447,7 @@ app.post('/login', async (req, res) => {
 //Post request för skapa en ny user, skickas via en form i bodyn med first_name, last_name, username osv. i bodyn
 app.post('/register', async (req, res) => {
     const { first_name, last_name, username, password, email } = req.body;
-    const role = "user";
+    const role = 'user';
    
     try {
         const result = await client.query(
@@ -336,6 +464,7 @@ app.post('/register', async (req, res) => {
 });
 
 
+app.use(express.static("public"));
 
 
 // Starta servern och anslut till databasen

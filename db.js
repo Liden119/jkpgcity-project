@@ -46,7 +46,8 @@ async function createStoresTable() {
             name VARCHAR(255) NOT NULL,
             url TEXT,
             district VARCHAR(100),
-            category VARCHAR(100)
+            category VARCHAR(100),
+            openingTimes VARCHAR(100)
         );
     `;
     try {
