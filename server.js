@@ -1,6 +1,4 @@
 const express = require('express');
-const fs = require("fs");
-const path = require("path");
 const { client } = require('./db'); // Importera client och getAllStores från db.js
 const app = express();
 const session = require('express-session');
@@ -44,12 +42,26 @@ app.get('/', async (req, res) => {
 
         // Hämta butiker från databasen med den uppdaterade SQL-frågan och parametrarna
         const result = await client.query(query, values);
-        const stores = result.rows;
+        let stores = result.rows;
+
+        stores = stores.sort((a, b) => a.name.localeCompare(b.name));
+        /*sort()-metod:
+        localeCompare() används för att jämföra två strängar (a.name och b.name). Den returnerar ett negativt värde om a är mindre än b, ett positivt värde om a är större än b, och 0 om de är lika.
+        Detta säkerställer att butikerna sorteras korrekt i bokstavsordning.
+        Sortering:
+        stores.sort((a, b) => a.name.localeCompare(b.name)); sorterar butikerna i stigande ordning baserat på butikens namn (a.name och b.name). */
 
 
         // Kontrollera om användaren är inloggad
         const loggedIn = req.session.loggedIn || false;
         const username = req.session.username || 'Gäst';
+        let admin;
+
+        if(req.session.role === "admin"){
+            admin = true;
+        } else{
+            admin = false;
+        }
 
         // Skapa dynamisk HTML
         res.send(`
@@ -67,6 +79,7 @@ app.get('/', async (req, res) => {
                     <img src="/img/logo_jkpgcity_white.png" alt="Logo" id="jkpglogo">
                     <h2 id="welcome-message">Välkommen, ${username}!</h2>
                     <div class="topbar-options">
+                    ${admin ? '<a href="/admin" id="topbar-admin">Admin Dashboard</a>' : ''}
                         ${loggedIn ? `
                             <a href="/logout" id="topbar-logout">Logga ut</a>
                         ` : `
@@ -249,6 +262,7 @@ app.get('/login', (req, res) => {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Login</title>
+            <link rel="stylesheet" href="/main.css">
         </head>
         <body>
             <div class="login-container">
@@ -278,6 +292,7 @@ app.get('/register', (req, res) => {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Register</title>
+            <link rel="stylesheet" href="/main.css">
         </head>
         <body>
             <div class="register-container">
@@ -307,45 +322,71 @@ app.get('/register', (req, res) => {
     `);
 });
 
+/* Admin Dashboard*/
+app.get('/admin', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
 
-/* GET REQUEST TO GET DATA FROM DATABASE / SESSION */
-// används för att checka om man är loggedIn samt användarnamnet för uppe i vänstra hörnet
-app.get('/session-status', (req, res) => {
-    const loggedIn = req.session.loggedIn || false;  // Kolla om användaren är inloggad
-    const username = req.session.username || null;  // Hämta användarnamnet om inloggad
-    res.json({ loggedIn: loggedIn, username: username });  // Skicka tillbaka JSON med loginstatus och användarnamn
-});
-
-//Används för att hämta alla stores, vid exempelvis start sidan. Den har också logiskt system för om filter 
-// (district / category) är valt att bara visa utifrån det
-app.get('/api/stores', async (req, res) => {
     try {
-        const { district, category } = req.query; // Hämta filtreringsparametrarna
-        let query = 'SELECT * FROM stores WHERE 1=1'; // Grundquery
-        let values = [];
+        const result = await client.query('SELECT * FROM users');  // Hämta alla användare
+        const users = result.rows;  // Alla användare från databasen
 
-        // Lägg till filtrering för district
-        if (district && district !== '') {
-            query += ' AND district = $' + (values.length + 1);
-            values.push(district);
-        }
+        // Bygg HTML-strukturen för att visa användarna
+        let userHtml = users.map(user => {
+            return `
+                <div class="user-card">
+                    <h3>${user.username}</h3>
+                    <p><strong>Förnamn:</strong> ${user.first_name}</p>
+                    <p><strong>Efternamn:</strong> ${user.last_name}</p>
+                    <p><strong>Email:</strong> ${user.email}</p> 
+                    <p><strong>Roll:</strong> ${user.role}</p>
+                     <form action="/admin/update-role" method="POST">
+                        <input type="hidden" name="userId" value="${user.id}">
+                        <label for="role">Roll:</label><br>
+                        <select name="role" id="role">
+                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select><br>
+                        <button type="submit">Ändra roll</button>
+                    </form><br>
 
-        // Lägg till filtrering för category
-        if (category && category !== '') {
-            query += ' AND category = $' + (values.length + 1);
-            values.push(category);
-        }
+                    <form action="/admin/update-password" method="POST">
+                        <input type="hidden" name="userId" value="${user.id}">
+                        <label for="role">Nytt Lösenord:</label>
+                        <input type="text" id="password" name="password" value="">
+                        <button type="submit">Ändra Lösenord</button>
+                    </form>
+                </div>
+            `;
+        }).join('');  // Joinar alla kort till en sträng
 
-        // Lägg till ORDER BY för att säkerställa att butikerna är sorterade
-        query += ' ORDER BY id ASC'; // Sortera butikerna efter id i stigande ordning
-
-        const result = await client.query(query, values);
-        res.json(result.rows);
+        // Rendera hela sidan med användarna
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="sv">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Admin Dashboard</title>
+                <link rel="stylesheet" href="/main.css">
+            </head>
+            <body>
+                <h1>Admin Dashboard</h1>
+                <h2>Alla användare</h2>
+                <div class="user-list">
+                    ${userHtml}
+                </div>
+            </body>
+            </html>
+        `);
     } catch (err) {
-        console.error('Error fetching stores:', err.stack);
-        res.status(500).json({ error: 'Error fetching stores' });
+        console.error('Error fetching users', err.stack);
+        res.status(500).send('Det gick inte att hämta användare.');
     }
 });
+
+
 
 
 //Används för "destroya" session så man loggas ut, och då försvinner även req.session.loggedIn (Vilket gör den false)
@@ -431,6 +472,7 @@ app.post('/login', async (req, res) => {
             if (user.password === password) {
                 req.session.loggedIn = true;
                 req.session.username = username;
+                req.session.role = user.role;  // Sätt användarens roll i sessionen
                 res.redirect('/');
             } else {
                 res.redirect("/login");
@@ -456,12 +498,79 @@ app.post('/register', async (req, res) => {
         );
 
         console.log('User added:', result.rows[0]);
-        res.redirect('/');
+        res.redirect('/login');
     } catch (err) {
         console.error('Error adding User:', err.stack);
         res.status(500).send('Kunde inte lägga till user.');
     }
 });
+
+
+
+app.post('/admin/update-role', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+
+    const { userId, role } = req.body;  // Hämta användarens ID och nya roll från formuläret
+
+    try {
+        // Hämta användarens användarnamn för att kontrollera om det är Liden119
+        const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const user = userResult.rows[0];
+
+        if (user && user.username === 'Liden119') {
+            // Om användarnamnet är Liden119, tillåt inte ändring av rollen
+            return res.status(400).send('Du kan inte ändra rollen för Liden119.');
+        }
+
+        // Om användaren inte är Liden119, uppdatera rollen i databasen
+        const result = await client.query(
+            'UPDATE users SET role = $1 WHERE id = $2 RETURNING *',
+            [role, userId]
+        );
+
+        if (result.rowCount > 0) {
+            // Om användaren uppdaterades, skicka tillbaka till admin-panelen
+            res.redirect('/admin');
+        } else {
+            res.status(400).send('Kunde inte uppdatera rollen.');
+        }
+    } catch (err) {
+        console.error('Error updating role', err.stack);
+        res.status(500).send('Det gick inte att uppdatera rollen.');
+    }
+});
+
+app.post('/admin/update-password', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+
+    const { userId, password } = req.body; 
+
+    try {
+        // Hämta användarens användarnamn för att kontrollera om det är Liden119
+        const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+
+        // Om användaren inte är Liden119, uppdatera rollen i databasen
+        const result = await client.query(
+            'UPDATE users SET password = $1 WHERE id = $2 RETURNING *',
+            [password, userId]
+        );
+
+        if (result.rowCount > 0) {
+            // Om användaren uppdaterades, skicka tillbaka till admin-panelen
+            res.redirect('/admin');
+        } else {
+            res.status(400).send('Kunde inte uppdatera lösenordet.');
+        }
+    } catch (err) {
+        console.error('Error updating password', err.stack);
+        res.status(500).send('Det gick inte att uppdatera lösenordet.');
+    }
+});
+
 
 
 app.use(express.static("public"));
