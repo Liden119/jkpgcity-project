@@ -52,6 +52,23 @@ app.get('/', async (req, res) => {
         Sortering:
         stores.sort((a, b) => a.name.localeCompare(b.name)); sorterar butikerna i stigande ordning baserat på butikens namn (a.name och b.name). */
 
+        const categoryIcons = {
+            "kläder": "clothes.png",
+            "hälsa": "health.png",
+            "sportFritid": "sport.png",
+            "livsmedel": "shoppingcart.png",
+            "hemInredning": "sofa.png",
+            "kultur": "book.png",
+            "elektronik": "plug.png",
+            "blommorVäxter": "flower.png",
+            "resorBiljetter": "ticket.png",
+            "tjänster": "hammer.png",
+            "spelTobak": "cigg.png",
+            "ekonomi": "money.png",
+            "godis": "candy.png",
+            "media": "camera.png",
+            "övrigt": "box.png" // Default icon
+        };
 
         // Kontrollera om användaren är inloggad
         const loggedIn = req.session.loggedIn || false;
@@ -134,11 +151,12 @@ app.get('/', async (req, res) => {
                                         <option value="kultur">Kultur</option>
                                         <option value="elektronik">Elektronik</option>
                                         <option value="blommorVäxter">Blommor & Växter</option>
-                                        <option value="secondHand">Second Hand</option>
                                         <option value="resorBiljetter">Resor & Biljetter</option>
                                         <option value="tjänster">Tjänster</option>
                                         <option value="spelTobak">Spel & Tobak</option>
                                         <option value="ekonomi">Ekonomi</option>
+                                        <option value="godis">Godis</option>
+                                        <option value="media">Media</option>
                                         <option value="övrigt" selected>Övrigt</option>
                                     </select><br>
     
@@ -163,11 +181,12 @@ app.get('/', async (req, res) => {
                                     <option value="kultur" ${category === "kultur" ? "selected" : ""}>Kultur</option>
                                     <option value="elektronik" ${category === "elektronik" ? "selected" : ""}>Elektronik</option>
                                     <option value="blommorVäxter" ${category === "blommorVäxter" ? "selected" : ""}>Blommor & Växter</option>
-                                    <option value="secondHand" ${category === "secondHand" ? "selected" : ""}>Second Hand</option>
                                     <option value="resorBiljetter" ${category === "resorBiljetter" ? "selected" : ""}>Resor & Biljetter</option>
                                     <option value="tjänster" ${category === "tjänster" ? "selected" : ""}>Tjänster</option>
                                     <option value="spelTobak" ${category === "spelTobak" ? "selected" : ""}>Spel & Tobak</option>
                                     <option value="ekonomi" ${category === "ekonomi" ? "selected" : ""}>Ekonomi</option>
+                                   <option value="godis" ${category === "godis" ? "selected" : ""}>Godis</option>
+                                   <option value="media" ${category === "media" ? "selected" : ""}>Media</option>
                                     <option value="övrigt" ${category === "övrigt" ? "selected" : ""}>Övrigt</option>
                                 </select>
                                 <label for="district">Distrikt:</label>
@@ -186,16 +205,19 @@ app.get('/', async (req, res) => {
                     </div>
 
                     <div class="stores-container">
-                        ${stores.map(store => `
-                            <div class="store-item">
-                                <h3>${store.name}</h3>
-                                <p>Distrikt: ${store.district}</p>
-                                <p>Kategori: ${store.category}</p>
-                                <a href="https://${store.url}" target="_blank" class="visit-button">Läs mer</a>
-                                ${admin ? `<a href="/edit-store/${store.id}" class="edit-button">Redigera butik</a>` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
+                ${stores.map(store => {
+                    const icon = categoryIcons[store.category] || "defaultIcon.png"; // Hämta rätt ikon
+                    return `
+                        <div class="store-item">
+                        <h3 class="store-header">${store.name}</h3>
+                            <h4 class="store-district">Distrikt: ${store.district}</h4>
+                            <img src="/img/${icon}" alt="${store.category} icon" class="store-icon">
+                            <a href="https://${store.url}" target="_blank" class="visit-button">Läs mer</a>
+                            ${admin ? `<a href="/edit-store/${store.id}" class="edit-button">Redigera butik</a>` : ''}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
 
                 </div>
             </body>
@@ -274,11 +296,12 @@ app.get('/edit-store/:storeId', async (req, res) => {
                             <option value="kultur" ${store.category === "kultur" ? "selected" : ""}>Kultur</option>
                             <option value="elektronik" ${store.category === "elektronik" ? "selected" : ""}>Elektronik</option>
                             <option value="blommorVäxter" ${store.category === "blommorVäxter" ? "selected" : ""}>Blommor & Växter</option>
-                            <option value="secondHand" ${store.category === "secondHand" ? "selected" : ""}>Second Hand</option>
                             <option value="resorBiljetter" ${store.category === "resorBiljetter" ? "selected" : ""}>Resor & Biljetter</option>
                             <option value="tjänster" ${store.category === "tjänster" ? "selected" : ""}>Tjänster</option>
                             <option value="spelTobak" ${store.category === "spelTobak" ? "selected" : ""}>Spel & Tobak</option>
                             <option value="ekonomi" ${store.category === "ekonomi" ? "selected" : ""}>Ekonomi</option>
+                            <option value="godis" ${store.category === "godis" ? "selected" : ""}>Godis</option>
+                            <option value="media" ${store.category === "media" ? "selected" : ""}>Media</option>
                             <option value="övrigt" ${store.category === "övrigt" ? "selected" : ""}>Övrigt</option>
                         </select><br><br>
 
