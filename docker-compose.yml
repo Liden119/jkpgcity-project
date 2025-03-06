@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  node-app:
+    build:
+      context: .
+      dockerfile: Dockerfile-node
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    command: /bin/sh -c "sleep 10 && npm start"  # Vänta 10 sekunder innan appen startar
+    
+volumes:
+  postgres-data:

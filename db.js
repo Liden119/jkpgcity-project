@@ -4,12 +4,13 @@ const path = require('path');
 
 // Skapa en instans av klienten
 const client = new Client({
-  host: 'localhost', // since the container's port is mapped to localhost
-  port: 5432,
-  user: 'postgres', // default user
-  password: '12345', // password set in the container command
-  database: 'postgres', // default database
+        host: 'localhost', // since the container's port is mapped to localhost
+        port: 5432,
+        user: 'postgres', // default user
+        password: '12345', // password set in the container command
+        database: 'postgres', // default database
 });
+
 
 async function connectDB() {
   try {
@@ -93,10 +94,11 @@ async function importStoresData() {
     }
 }
 
-
+//connectDB();
 createUserTable();
 createStoresTable();
 importStoresData();
+
 
 module.exports = {
     client

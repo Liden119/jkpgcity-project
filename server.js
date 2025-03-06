@@ -1,5 +1,5 @@
 const express = require('express');
-const { client } = require('./db'); // Importera client och getAllStores från db.js
+const { client } = require('./db'); // Importera client från db.js
 const app = express();
 const session = require('express-session');
 const bcrypt = require('bcrypt');
@@ -27,7 +27,7 @@ app.get('/', async (req, res) => {
         // Bygg SQL-frågan baserat på de valda filtren
         let query = 'SELECT * FROM stores WHERE 1=1'; // Starta med en grundläggande SELECT
 
-        const values = []; // Skapa en array för att lagra parametrarna som vi skickar till SQL
+        const values = []; 
 
         // Om kategori är vald, lägg till den i frågan och lägg till värdet i values-arrayen
         if (category) {
@@ -484,8 +484,6 @@ app.get('/admin', async (req, res) => {
 });
 
 
-
-
 //Används för "destroya" session så man loggas ut, och då försvinner även req.session.loggedIn (Vilket gör den false)
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
@@ -525,10 +523,12 @@ app.post('/api/store/:id', async (req, res) => {
 //Post request som lägger till en ny store, hämtar datan från body (En "form" i html som skickar en post request till servern)
 app.post('/add-store', async (req, res) => {
     const { name, district, category, url } = req.body;
-    // Kontrollera om användaren är inloggad
+    
     if (!req.session.loggedIn) {
         return res.status(403).send('Du måste vara inloggad för att lägga till en butik.');
     }
+
+    
     try {
         const result = await client.query(
             'INSERT INTO stores (name, district, category, url) VALUES ($1, $2, $3, $4) RETURNING *',
@@ -545,9 +545,11 @@ app.post('/add-store', async (req, res) => {
 //Post request som tar bort ett projekt, skickas en POST request från ett form i bodyn, och med dens ID till back-end
 app.post('/delete-store/:id', async (req, res) => {
     const storeId = req.params.id;
-    if (!req.session.loggedIn) {
-        return res.status(403).send('Not logged in');
+
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
     }
+
     try {
         await client.query('DELETE FROM stores WHERE id = $1', [storeId]);
         console.log(`Store with ID ${storeId} deleted.`);
@@ -561,6 +563,7 @@ app.post('/delete-store/:id', async (req, res) => {
 //POST request för checka lösenord o användarnamn från databasen. Skickas en post request från bodyn med värdena man fyllt i fältet när man klickar log in
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    
     try {
         const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
         const user = result.rows[0];
@@ -592,9 +595,7 @@ app.post('/register', async (req, res) => {
     const role = 'user';
    
     try {
-
         const hashedPassword = await bcrypt.hash(password, 10);
-
 
         const result = await client.query(
             'INSERT INTO users (first_name, last_name, username, password, email, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
@@ -705,7 +706,6 @@ app.post('/admin/delete-user', async (req, res) => {
         res.status(500).send('Det gick inte att ta bort användaren.');
     }
 });
-
 
 
 app.use(express.static("public"));
