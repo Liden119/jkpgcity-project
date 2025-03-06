@@ -1,13 +1,128 @@
 const express = require('express');
-const { client } = require('./db'); // Importera client från db.js
+const { Client } = require('pg');
 const app = express();
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
+let client;  // Global variabel för klienten
+
+
+// Skapa tabeller
+async function createTables() {
+    const createUsersTable = `
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            first_name VARCHAR(50),
+            last_name VARCHAR(50),
+            username VARCHAR(100) UNIQUE,
+            password VARCHAR(255),
+            email VARCHAR(100) UNIQUE,
+            role VARCHAR(50)
+        );
+    `;
+    
+    const createStoresTable = `
+        CREATE TABLE IF NOT EXISTS stores (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) UNIQUE,
+            url TEXT,
+            district VARCHAR(100),
+            category VARCHAR(100)
+        );
+    `;
+    
+    try {
+        await client.query(createUsersTable);
+        await client.query(createStoresTable);
+        console.log('Tables created successfully (if they didn\'t already exist).');
+    } catch (err) {
+        console.error('Error creating tables:', err);
+    }
+}
+
+// Lägg till butiker
+async function createStores() {
+    const storesFilePath = path.join(__dirname, 'public', 'stores.json');
+    const stores = JSON.parse(fs.readFileSync(storesFilePath, 'utf-8'));
+
+    const insertStoreQuery = `
+        INSERT INTO stores (name, url, district, category)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (name) DO NOTHING
+    `;
+
+    try {
+        for (let store of stores) {
+            await client.query(insertStoreQuery, [store.name, store.url, store.district, 'övrigt']);
+        }
+        console.log('Stores added to the database (duplicates ignored).');
+    } catch (err) {
+        console.error('Error adding stores:', err);
+    }
+}
+
+async function createUser() {
+    // Förbereda SQL-fråga för att sätta in användaren
+    const insertUserQuery = `
+        INSERT INTO users (first_name, last_name, username, password, email, role)
+        VALUES ('Daniel', 'Lidén', 'Liden119', '$2b$10$WGClt15qJh6hRDH5D12EFuovHK0XIM3cGwDy.4RiWnCh5YuiXZWGO', 'danielliden2@hotmail.com', 'admin')
+        ON CONFLICT (username) DO NOTHING
+    `;
+    
+    try {
+        // Försök att sätta in användaren i databasen
+        await client.query(insertUserQuery);
+        console.log('User Liden119 created or already exists.');
+    } catch (err) {
+        console.error('Error adding user:', err);
+    }
+}
+
+// Skapa tabeller och lägg till data
+async function setupDatabase() {
+    await createTables();
+    await createStores();
+    await createUser();
+}
+
+// Anslut till databasen och kör setup
+async function startServer() {
+    const connectWithRetry = async () => {
+        // Skapa en ny Client-instans varje gång vi försöker ansluta
+        client = new Client({
+            connectionString: process.env.DATABASE_URL
+        });
+
+        try {
+            // Försök att ansluta till databasen
+            await client.connect();
+            console.log('Connected to database');
+
+            // Kör databassättet om anslutningen lyckas
+            await setupDatabase();
+
+            // Starta Express-servern efter databasanslutning
+            startExpressServer();
+        } catch (err) {
+            console.error('Database connection failed, retrying in 5 seconds...', err);
+            setTimeout(connectWithRetry, 5000);  // Försök igen om 5 sekunder
+        }
+    };
+
+    connectWithRetry();
+
+    // Starta Express-servern
+    function startExpressServer() {
+        app.listen(8080, () => {
+            console.log('Server listening on port 8080!');
+        });
+    }
+}
 
 // Middleware för att läsa JSON i POST-förfrågningar
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 
 // Lägg till express-session middleware för att hantera sessioner
 app.use(session({
@@ -15,7 +130,6 @@ app.use(session({
     resave: false,  
     saveUninitialized: false,  
 }));
-
 
 /* GET REQUESTS THAT SERVES HTML FILES: */
 // --------------------------------------
@@ -27,22 +141,22 @@ app.get('/', async (req, res) => {
         // Bygg SQL-frågan baserat på de valda filtren
         let query = 'SELECT * FROM stores WHERE 1=1'; // Starta med en grundläggande SELECT
 
-        const values = []; 
+        const values = [];  //Tom array == Values.length = 0
 
         // Om kategori är vald, lägg till den i frågan och lägg till värdet i values-arrayen
         if (category) {
-            query += ` AND category = $${values.length + 1}`;
+            query += ` AND category = $${values.length + 1}`; //då values.length är 0, så +1 för att få det till $1 (För query längre ner)
             values.push(category);
         }
 
         // Om distrikt är valt, lägg till det i frågan och lägg till värdet i values-arrayen
         if (district) {
-            query += ` AND district = $${values.length + 1}`;
+            query += ` AND district = $${values.length + 1}`; //Om category lagts till, så är values.length = 1, och +1 gör att denna blir $2. Men om category inte är med, blir den $1 (eftersom values.length = 0)
             values.push(district);
         }
 
         // Hämta butiker från databasen med den uppdaterade SQL-frågan och parametrarna
-        const result = await client.query(query, values);
+        const result = await client.query(query, values); //Det är här category och district förfrågas (ALLT (*) om inget är valt, + values om category / district inlagt --> bildar $1 och $2 argument)
         let stores = result.rows;
 
         stores = stores.sort((a, b) => a.name.localeCompare(b.name));
@@ -710,22 +824,5 @@ app.post('/admin/delete-user', async (req, res) => {
 
 app.use(express.static("public"));
 
-
-// Starta servern och anslut till databasen
-async function startServer() {
-    try {
-        // Ansätt klienten till databasen, detta görs endast en gång
-        await client.connect();
-        console.log('Connected to PostgreSQL database');
-        
-        // Starta servern när anslutningen är etablerad
-        app.listen(3000, () => {
-            console.log('Server listening on port 3000!');
-        });
-
-    } catch (err) {
-        console.error('Connection error', err.stack);
-    }
-}
-
-startServer(); // Kör serverstarten
+// Starta servern
+startServer();

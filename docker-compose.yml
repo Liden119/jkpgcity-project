@@ -1,9 +1,12 @@
-version: "3.9"
+version: '3.8'
+
 services:
-  postgres:
+  database:
     build:
       context: .
-      dockerfile: Dockerfile-postgres
+      dockerfile: Dockerfile.database  # Bygger från din custom Dockerfile
+    container_name: postgres_db
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
@@ -11,17 +14,20 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
 
-  node-app:
+  frontend:
     build:
       context: .
-      dockerfile: Dockerfile-node
+      dockerfile: Dockerfile.frontend  # Bygger frontend från din frontend-Dockerfile
+    container_name: node_frontend
+    restart: always
     ports:
-      - "3000:3000"
+      - "8080:8080"
     depends_on:
-      - postgres
-    command: /bin/sh -c "sleep 10 && npm start"  # Vänta 10 sekunder innan appen startar
-    
+      - database
+    environment:
+      DATABASE_URL: "postgres://postgres:12345@database:5432/postgres"
+
 volumes:
-  postgres-data:
+  db_data:
