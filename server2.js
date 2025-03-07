@@ -123,7 +123,6 @@ async function startServer() {
 // Middleware för att läsa JSON i POST-förfrågningar
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
 
 // Lägg till express-session middleware för att hantera sessioner
 app.use(session({
@@ -134,6 +133,11 @@ app.use(session({
 
 /* GET REQUESTS THAT SERVES HTML FILES: */
 // --------------------------------------
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.get('/api/stores', async (req, res) => {
     try {
         const { category, district } = req.query;
@@ -158,28 +162,6 @@ app.get('/api/stores', async (req, res) => {
         res.status(500).json({ error: "Något gick fel vid hämtning av butiker." });
     }
 });
-
-
-app.get('/api/session-status', (req, res) => {
-    res.json({
-        loggedIn: !!req.session.loggedIn, // true om inloggad, annars false
-        username: req.session.username || 'Gäst',
-        isAdmin: req.session.role === "admin"
-    });
-});
-
-//Login formulärets display av html
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-//Register formulärets display av html
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'register.html'));
-});
-
-
-
 
 
 // Edit av butikers display av html, samt en check av inlogg eller ej (nekas om inte inloggad)
@@ -274,6 +256,75 @@ app.get('/edit-store/:storeId', async (req, res) => {
     }
 });
 
+
+//Login formulärets display av html
+app.get('/login', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Login</title>
+            <link rel="stylesheet" href="/main.css">
+        </head>
+        <body>
+            <div class="otherPages-container">
+                <h2>Logga in</h2>
+                <form action="/login" method="POST">
+                    <label for="username">Användarnamn:</label>
+                    <input type="text" id="username" name="username" required>
+
+                    <label for="password">Lösenord:</label>
+                    <input type="password" id="password" name="password" required>
+
+                    <button type="submit">Logga in</button>
+                </form>
+                <p id="loginError" style="color: red; display: none;">Felaktigt användarnamn eller lösenord.</p>
+                <p>Har du inget konto? <a href="/register">Registrera dig här</a></p>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
+app.get('/register', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Register</title>
+            <link rel="stylesheet" href="/main.css">
+        </head>
+        <body>
+            <div class="otherPages-container">
+                <h2>Register</h2>
+                <form action="/register" method="POST">
+                    <label for="first_name">Förnamn:</label>
+                    <input type="text" id="first_name" name="first_name" required>
+
+                    <label for="last_name">Efternamn:</label>
+                    <input type="text" id="last_name" name="last_name" required>
+
+                    <label for="email">Email:</label>
+                    <input type="text" id="email" name="email" required>
+
+                    <label for="username">Användarnamn:</label>
+                    <input type="text" id="username" name="username" required>
+
+                    <label for="password">Lösenord:</label>
+                    <input type="password" id="password" name="password" required>
+
+                    <button type="submit">Registrera</button>
+                </form>
+                <p>Redan registrerad? <a href="/login">Logga in här</a></p>
+            </div>
+        </body>
+        </html>
+    `);
+});
 
 /* Admin Dashboard*/
 app.get('/admin', async (req, res) => {
@@ -591,7 +642,7 @@ app.post('/admin/delete-user', async (req, res) => {
 });
 
 
-
+app.use(express.static("public"));
 
 // Starta servern
 startServer();

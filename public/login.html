@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Login</title>
+            <link rel="stylesheet" href="/main.css">
+        </head>
+        <body>
+            <div class="otherPages-container">
+                <h2>Logga in</h2>
+                <form action="/login" method="POST">
+                    <label for="username">Användarnamn:</label> <br>
+                    <input type="text" id="username" name="username" required> <br><br>
+
+                    <label for="password">Lösenord:</label> <br>
+                    <input type="password" id="password" name="password" required> <br><br>
+
+                    <button type="submit">Logga in</button>
+                </form>
+                <p>Har du inget konto? <a href="/register">Registrera dig här</a></p>
+            </div>
+        </body>
+        </html>

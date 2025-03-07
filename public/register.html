@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Register</title>
+            <link rel="stylesheet" href="/main.css">
+        </head>
+        <body>
+            <div class="otherPages-container">
+                <h2>Register</h2>
+                <form action="/register" method="POST">
+                    <label for="first_name">Förnamn:</label> <br>
+                    <input type="text" id="first_name" name="first_name" required> <br><br>
+
+                    <label for="last_name">Efternamn:</label> <br>
+                    <input type="text" id="last_name" name="last_name" required> <br><br>
+
+                    <label for="email">Email:</label> <br>
+                    <input type="text" id="email" name="email" required> <br><br>
+
+                    <label for="username">Användarnamn:</label> <br>
+                    <input type="text" id="username" name="username" required> <br><br>
+
+                    <label for="password">Lösenord:</label> <br>
+                    <input type="password" id="password" name="password" required> <br><br>
+
+                    <button type="submit">Registrera</button>
+                </form>
+                <p>Redan registrerad? <a href="/login">Logga in här</a></p>
+            </div>
+        </body>
+        </html>

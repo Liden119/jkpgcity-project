@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project</title>
+    <link rel="stylesheet" href="/main.css">
+    <script src="/main.js" defer></script>
+</head>
+<body>
+    <div class="topbar-container">
+        <img src="/img/logo_jkpgcity_white.png" alt="Logo" id="jkpglogo">
+        <h2 id="welcome-message">Välkommen, <span id="username">Gäst</span>!</h2>
+        <div class="topbar-options">
+            <a href="/register" id="topbar-register">Registrera</a>
+            <a href="/login" id="topbar-login">Logga in</a>
+            <a href="/admin" id="topbar-admin">Admin Kontrollpanel</a>
+            <a href="/logout" id="topbar-logout">Logga ut</a>
+        </div>
+    </div>
+
+    <div class="hero-container">
+        <img src="/img/heroImage.jpg" alt="Hero Image" class="hero-image">
+        <div class="hero-text-box">
+            <h1 class="hero-text-header">VÄLKOMMEN TILL JÖNKÖPING CITY</h1>
+            <p class="hero-text-paragraph">Upplev hösten i vår mysiga stadskärna!</p>
+        </div>
+    </div>
+
+    <div class="content-container">
+        <div class="top-section-container">
+            <h1 class="top-section-header">Affärer</h1>
+            <div id="add-store-container"></div>
+            <div class="filter-container">
+                <h2>Filtrera</h2>
+                <select id="category">
+                    <option value="">Alla</option>
+                    <option value="kläder">Kläder</option>
+                    <option value="hälsa">Hälsa</option>
+                    <option value="sportFritid">Sport & Fritid</option>
+                    <option value="livsmedel">Livsmedel</option>
+                    <option value="hemInredning">Hem & Inredning</option>
+                    <option value="kultur">Kultur</option>
+                    <option value="elektronik">Elektronik</option>
+                    <option value="blommorVäxter">Blommor & Växter</option>
+                    <option value="resorBiljetter">Resor & Biljetter</option>
+                    <option value="tjänster">Tjänster</option>
+                    <option value="spelTobak">Spel & Tobak</option>
+                    <option value="ekonomi">Ekonomi</option>
+                    <option value="godis">Godis</option>
+                    <option value="media">Media</option>
+                    <option value="övrigt">Övrigt</option>
+                </select>
+                <select id="district">
+                    <option value="">Alla</option>
+                    <option value="Öster">Öster</option>
+                    <option value="Väster">Väster</option>
+                    <option value="Tändsticksområdet">Tändsticksområdet</option>
+                    <option value="Atollen">Atollen</option>
+                    <option value="Resecentrum">Resecentrum</option>
+                    <option value="Annat">Annat</option>
+                </select>
+                <button id="filter-button">Sök</button>
+            </div>
+        </div>
+
+        <div id="stores-container" class="stores-container">
+            <!-- Butiker läggs till här av JavaScript -->
+        </div>
+    </div>
+
+</body>
+</html>
