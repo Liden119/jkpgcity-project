@@ -208,6 +208,9 @@ h1, h2, h3, h4 {
     cursor: pointer;
 }
 
+.add-store-container{
+}
+
 /* Edit form and delete button */
 #add-store-form-container{
     width: 310px;
@@ -216,7 +219,7 @@ h1, h2, h3, h4 {
     margin-top: -10px;
 }
 
-#delete-button{
+.delete-button{
     background-color: red;
     color: white ;
 }

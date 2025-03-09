@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redigera Butik</title>
+    <link rel="stylesheet" href="/main.css">
+    <script src="/edit-store.js" defer></script>
+</head>
+<body>
+    <div class="otherPages-container">
+        <h1>Redigera Butik</h1>
+        <form id="edit-form">
+            <label for="name">Namn:</label>
+            <input type="text" id="name" name="name"><br><br>
+
+            <label for="url">URL: https://</label>
+            <input type="text" id="url" name="url"><br><br>
+
+            <label for="district">District:</label>
+            <select id="district" name="district">
+                <option value="Öster">Öster</option>
+                <option value="Väster">Väster</option>
+                <option value="Tändsticksområdet">Tändsticksområdet</option>
+                <option value="Atollen">Atollen</option>
+                <option value="Resecentrum">Resecentrum</option>
+                <option value="Annat">Annat</option>
+            </select><br><br>
+
+            <label for="category">Category:</label>
+            <select id="category" name="category">
+                <option value="kläder">Kläder & Accessoarer</option>
+                <option value="hälsa">Hälsa</option>
+                <option value="sportFritid">Sport & Fritid</option>
+                <option value="livsmedel">Livsmedel</option>
+                <option value="hemInredning">Hem & Inredning</option>
+                <option value="kultur">Kultur</option>
+                <option value="elektronik">Elektronik</option>
+                <option value="blommorVäxter">Blommor & Växter</option>
+                <option value="resorBiljetter">Resor & Biljetter</option>
+                <option value="tjänster">Tjänster</option>
+                <option value="spelTobak">Spel & Tobak</option>
+                <option value="ekonomi">Ekonomi</option>
+                <option value="godis">Godis</option>
+                <option value="media">Media</option>
+                <option value="övrigt">Övrigt</option>
+            </select><br><br>
+
+            <button type="submit">Spara ändringar</button>
+        </form>
+
+        <h2>Ta Bort Butiken</h2>
+        <button id="delete-button">Delete</button>
+    </div>
+</body>
+</html>

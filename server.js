@@ -132,7 +132,7 @@ app.use(session({
     saveUninitialized: false,  
 }));
 
-/* GET REQUESTS THAT SERVES HTML FILES: */
+/* API REQUEST/RESPONSES TO SERVE STORE/STORES FROM DATABASE IN FETCH */
 // --------------------------------------
 app.get('/api/stores', async (req, res) => {
     try {
@@ -159,252 +159,56 @@ app.get('/api/stores', async (req, res) => {
     }
 });
 
-
-app.get('/api/session-status', (req, res) => {
-    res.json({
-        loggedIn: !!req.session.loggedIn, // true om inloggad, annars false
-        username: req.session.username || 'Gäst',
-        isAdmin: req.session.role === "admin"
-    });
-});
-
-//Login formulärets display av html
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-//Register formulärets display av html
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'register.html'));
-});
-
-
-
-
-
-// Edit av butikers display av html, samt en check av inlogg eller ej (nekas om inte inloggad)
-app.get('/edit-store/:storeId', async (req, res) => {
-
-    if (req.session.role !== 'admin') {
-        return res.status(403).send('Du har inte tillgång till denna sida.');
-    }
-
-    const storeId = req.params.storeId;
-
-    let admin;
-
-        if(req.session.role === "admin"){
-            admin = true;
-        } else{
-            admin = false;
-        }
+app.get('/api/store/:id', async (req, res) => {
+    const storeId = req.params.id;
 
     try {
-        // Hämta butikens info från databasen
-        const dbres = await client.query('SELECT * FROM stores WHERE id = $1', [storeId]);
-        const store = dbres.rows[0];
+        const result = await client.query('SELECT * FROM stores WHERE id=$1', [storeId]);
 
-        if (!store) {
-            return res.status(404).send("Butiken hittades inte");
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Butiken hittades inte." });
         }
 
-        // Skicka dynamisk HTML
-        res.send(`
-            <!DOCTYPE html>
-            <html lang="sv">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Redigera Butik</title>
-                <link rel="stylesheet" href="/main.css">
-            </head>
-            <body>
-                <div class="otherPages-container">
-                    <h1>Redigera Butik</h1>
-                    <form id="edit-form" action="/api/store/${storeId}" method="POST">
-                        <label for="name">Namn:</label>
-                        <input type="text" id="name" name="name" value="${store.name}"><br><br>
-
-                        <label for="url">URL: https://</label>
-                        <input type="text" id="url" name="url" value="${store.url}"><br><br>
-
-                        <label for="district">District:</label>
-                        <select id="district" name="district">
-                            <option value="Öster" ${store.district === "Öster" ? "selected" : ""}>Öster</option>
-                            <option value="Väster" ${store.district === "Väster" ? "selected" : ""}>Väster</option>
-                            <option value="Tändsticksområdet" ${store.district === "Tändsticksområdet" ? "selected" : ""}>Tändsticksområdet</option>
-                            <option value="Atollen" ${store.district === "Atollen" ? "selected" : ""}>Atollen</option>
-                            <option value="Resecentrum" ${store.district === "Resecentrum" ? "selected" : ""}>Resecentrum</option>
-                            <option value="Annat" ${store.district === "Annat" ? "selected" : ""}>Annat</option>
-                        </select><br><br>
-
-                        <label for="category">Category:</label>
-                        <select id="category" name="category">
-                            <option value="kläder" ${store.category === "kläder" ? "selected" : ""}>Kläder & Accessoarer</option>
-                            <option value="hälsa" ${store.category === "hälsa" ? "selected" : ""}>Hälsa</option>
-                            <option value="sportFritid" ${store.category === "sportFritid" ? "selected" : ""}>Sport & Fritid</option>
-                            <option value="livsmedel" ${store.category === "livsmedel" ? "selected" : ""}>Livsmedel</option>
-                            <option value="hemInredning" ${store.category === "hemInredning" ? "selected" : ""}>Hem & Inredning</option>
-                            <option value="kultur" ${store.category === "kultur" ? "selected" : ""}>Kultur</option>
-                            <option value="elektronik" ${store.category === "elektronik" ? "selected" : ""}>Elektronik</option>
-                            <option value="blommorVäxter" ${store.category === "blommorVäxter" ? "selected" : ""}>Blommor & Växter</option>
-                            <option value="resorBiljetter" ${store.category === "resorBiljetter" ? "selected" : ""}>Resor & Biljetter</option>
-                            <option value="tjänster" ${store.category === "tjänster" ? "selected" : ""}>Tjänster</option>
-                            <option value="spelTobak" ${store.category === "spelTobak" ? "selected" : ""}>Spel & Tobak</option>
-                            <option value="ekonomi" ${store.category === "ekonomi" ? "selected" : ""}>Ekonomi</option>
-                            <option value="godis" ${store.category === "godis" ? "selected" : ""}>Godis</option>
-                            <option value="media" ${store.category === "media" ? "selected" : ""}>Media</option>
-                            <option value="övrigt" ${store.category === "övrigt" ? "selected" : ""}>Övrigt</option>
-                        </select><br><br>
-
-                        <button type="submit">Spara ändringar</button>
-                    </form>
-
-                    <h2>Ta Bort Butiken</h2>
-                    <form id="delete-form" action="/delete-store/${storeId}" method="POST">
-                        <button type="submit" id="delete-button">Delete</button>
-                    </form>
-                </div>
-            </body>
-            </html>
-        `);
+        res.json(result.rows[0]); // Returnera den specifika butiken
     } catch (error) {
-        console.error("Fel vid hämtning av butik:", error);
-        res.status(500).send("Försök igen senare.");
+        console.error("Error fetching store:", error);
+        res.status(500).json({ error: "Något gick fel vid hämtning av butiken." });
     }
 });
 
-
-/* Admin Dashboard*/
-app.get('/admin', async (req, res) => {
-    if (req.session.role !== 'admin') {
-        return res.status(403).send('Du har inte tillgång till denna sida.');
-    }
-
-    let admin;
-
-        if(req.session.role === "admin"){
-            admin = true;
-        } else{
-            admin = false;
-        }
-
-    try {
-        const result = await client.query('SELECT * FROM users');  // Hämta alla användare
-        const users = result.rows;  // Alla användare från databasen
-
-        // Sortera användarna så att admin kommer först
-        users.sort((a, b) => {
-            if (a.role === 'admin' && b.role !== 'admin') {
-                return -1;  // Sätt 'admin' före 'user'
-            }
-            if (a.role !== 'admin' && b.role === 'admin') {
-                return 1;  // Sätt 'user' efter 'admin'
-            }
-            return 0;  // Om båda har samma roll, behåll ordningen
-        });
-
-        // Bygg HTML-strukturen för att visa användarna
-        let userHtml = users.map(user => {
-            return `
-                <div class="user-card">
-                    <h3 ${user.role === 'admin' ? 'id="user-card-admin"' : ''}>${user.username}</h3>
-                    <p><strong>Förnamn:</strong> ${user.first_name}</p>
-                    <p><strong>Efternamn:</strong> ${user.last_name}</p>
-                    <p><strong>Email:</strong> ${user.email}</p> 
-                    <p><strong>Roll:</strong> ${user.role}</p>
-                     <form action="/admin/update-role" method="POST">
-                        <input type="hidden" name="userId" value="${user.id}">
-                        <label for="role">Ändra Roll:</label><br>
-                        <select name="role" id="role">
-                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
-                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
-                        </select><br>
-                        <button type="submit">Ändra roll</button>
-                    </form><br>
-
-                    <form action="/admin/update-password" method="POST">
-                        <input type="hidden" name="userId" value="${user.id}">
-                        <label for="password">Ändra Lösenord:</label><br>
-                        <input type="text" id="password" name="password" value=""><br>
-                        <button type="submit">Ändra Lösenord</button>
-                    </form><br>
-
-                    <form action="/admin/delete-user" method="POST">
-                        <input type="hidden" name="userId" value="${user.id}">
-                        <label for="delete">Radera användare</label><br>
-                        <button type="submit" id="delete-button" style="${user.username === 'Liden119' ? 'display: none;' : ''}">Ta bort användare</button>
-                    </form>
-                </div>
-            `;
-        }).join('');  // Joinar alla kort till en sträng
-
-        // Rendera hela sidan med användarna
-        res.send(`
-            <!DOCTYPE html>
-            <html lang="sv">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Admin Kontrollpanel</title>
-                <link rel="stylesheet" href="/main.css">
-            </head>
-            <body>
-            <div class="otherPages-container"> 
-                <h1>Admin Kontrollpanel</h1>
-                <h2>Alla användare</h2>
-                <div class="user-list">
-                    ${userHtml}
-                </div>
-                </div>
-            </body>
-            </html>
-        `);
-    } catch (err) {
-        console.error('Error fetching users', err.stack);
-        res.status(500).send('Det gick inte att hämta användare.');
-    }
-});
-
-
-//Används för "destroya" session så man loggas ut, och då försvinner även req.session.loggedIn (Vilket gör den false)
-app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).send('Fel vid utloggning');
-        }
-        res.redirect("/");
-    });
-});
-
-
-/* POST REQUEST TO UPDATE DATA */
-// används för att i databasen (via query'n + req.body) uppdatera data av stores (exempelvis namn, url osv.)
-app.post('/api/store/:id', async (req, res) => {
+app.put('/api/store/:id', async (req, res) => {
     const storeId = req.params.id;
     const { name, url, district, category } = req.body;
+
+    console.log("storeId:", storeId);
+    console.log("Request Body:", req.body);
+
     try {
+        // Uppdatera butiken i databasen
         const dbres = await client.query(
             `UPDATE stores 
              SET name = $1, url = $2, district = $3, category = $4
              WHERE id = $5 RETURNING *`,
             [name, url, district, category, storeId]
         );
+
+        console.log("dbres.rows:", dbres.rows);
+
+        // Kontrollera om butiken finns
         if (dbres.rows.length === 0) {
             return res.status(404).json({ error: "Butiken hittades inte." });
         }
-        res.redirect("/");
+
+        // Skicka tillbaka den uppdaterade butikens data
+        res.status(200).json({ message: "Butiken uppdaterad", store: dbres.rows[0] });
+
     } catch (err) {
         console.error("Error", err.stack);
         res.status(500).json({ error: "Något gick fel vid uppdatering." });
     }
 });
 
-
-/* POST REQUEST TO ADD DATA */
-//-------------------------------
-//Post request som lägger till en ny store, hämtar datan från body (En "form" i html som skickar en post request till servern)
-app.post('/add-store', async (req, res) => {
+app.post('/api/add-store', async (req, res) => {
     const { name, district, category, url } = req.body;
     
     if (!req.session.loggedIn) {
@@ -425,25 +229,177 @@ app.post('/add-store', async (req, res) => {
     }
 });
 
-//Post request som tar bort ett projekt, skickas en POST request från ett form i bodyn, och med dens ID till back-end
-app.post('/delete-store/:id', async (req, res) => {
+app.delete('/api/delete-store/:id', async (req, res) => { 
     const storeId = req.params.id;
 
+    // Kontrollera om användaren är administratör
     if (req.session.role !== 'admin') {
         return res.status(403).send('Du har inte tillgång till denna sida.');
     }
 
     try {
-        await client.query('DELETE FROM stores WHERE id = $1', [storeId]);
+        // Ta bort butiken från databasen
+        const result = await client.query('DELETE FROM stores WHERE id = $1 RETURNING *', [storeId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).send('Butiken hittades inte.');
+        }
+
         console.log(`Store with ID ${storeId} deleted.`);
-        res.redirect('/');
+        res.status(200).json({ message: 'Butiken har tagits bort.' });
     } catch (err) {
         console.error('Error deleting store:', err.stack);
         res.status(500).send('Error deleting store');
     }
 });
 
-//POST request för checka lösenord o användarnamn från databasen. Skickas en post request från bodyn med värdena man fyllt i fältet när man klickar log in
+
+/* API REQUEST/RESPONSES TO SERVE USER/USERS FROM DATABASE IN FETCH */
+// --------------------------------------
+app.get('/api/session-status', (req, res) => {
+    res.json({
+        loggedIn: !!req.session.loggedIn, // true om inloggad, annars false
+        username: req.session.username || 'Gäst',
+        isAdmin: req.session.role === "admin"
+    });
+});
+
+app.get('/api/users', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till detta.');
+    }
+
+    try {
+        const result = await client.query('SELECT * FROM users');
+        const users = result.rows;
+
+        users.sort((a, b) => {
+            if (a.role === 'admin' && b.role !== 'admin') {
+                return -1;  // Sätt 'admin' före 'user'
+            }
+            if (a.role !== 'admin' && b.role === 'admin') {
+                return 1;  // Sätt 'user' efter 'admin'
+            }
+            return 0;  // Om båda har samma roll, behåll ordningen
+        });
+
+        res.json({ users });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ error: "Något gick fel vid hämtning av användare." });
+    }
+});
+
+app.post('/api/add-user', async (req, res) => {
+    const { first_name, last_name, username, password, email } = req.body;
+    const role = 'user';
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const result = await client.query(
+            'INSERT INTO users (first_name, last_name, username, password, email, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [first_name, last_name, username, hashedPassword, email, role]
+        );
+
+        console.log('User added:', result.rows[0]);
+        res.redirect('/login');
+    } catch (err) {
+        console.error('Error adding User:', err.stack);
+        res.status(500).send('Kunde inte lägga till user.');
+    }
+});
+
+app.put('/api/update-role', async (req, res) => { 
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+
+    const { userId, role } = req.body;  // Hämta användarens ID och nya roll från formuläret
+
+    try {
+        // Hämta användarens användarnamn för att kontrollera om det är Liden119
+        const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const user = userResult.rows[0];
+
+        if (user && user.username === 'Liden119') {
+            // Om användarnamnet är Liden119, tillåt inte ändring av rollen
+            return res.status(400).send('Du kan inte ändra rollen för Liden119.');
+        }
+
+        // Om användaren inte är Liden119, uppdatera rollen i databasen
+        const result = await client.query(
+            'UPDATE users SET role = $1 WHERE id = $2 RETURNING *',
+            [role, userId]
+        );
+
+        if (result.rowCount > 0) {
+            // Om användaren uppdaterades, skicka tillbaka till admin-panelen
+            res.json({ message: "Rollen uppdaterades!" });  // Returnera ett JSON-svar för fetch
+        } else {
+            res.status(400).send('Kunde inte uppdatera rollen.');
+        }
+    } catch (err) {
+        console.error('Error updating role', err.stack);
+        res.status(500).send('Det gick inte att uppdatera rollen.');
+    }
+});
+
+app.delete('/api/delete-user/:id', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till detta.');
+    }
+
+    const { id: userId } = req.params;  // Hämta användarens ID från URL-parametern
+
+    try {
+        const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const user = userResult.rows[0];
+
+        if (user.username === 'Liden119') {
+            return res.status(400).send('Du kan inte ta bort användaren Liden119.');
+        }
+
+        // Ta bort användaren från databasen
+        const result = await client.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId]);
+
+        if (result.rowCount > 0) {
+            res.status(200).send('Användare raderad.');
+        } else {
+            res.status(400).send('Kunde inte ta bort användaren.');
+        }
+    } catch (err) {
+        console.error('Error deleting user', err.stack);
+        res.status(500).send('Det gick inte att ta bort användaren.');
+    }
+});
+
+
+/* GET REQUESTS TO SERVE DIFFERENT STATIC HTML FILES */
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+app.get('/edit-store/:storeId', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+
+ res.sendFile(path.join(__dirname, 'public', 'edit-store.html'));
+});
+app.get('/admin', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+
+//Login and Logout
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     
@@ -470,127 +426,14 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Serverfel vid inloggning.');
     }
 });
-
-
-//Post request för skapa en ny user, skickas via en form i bodyn med first_name, last_name, username osv. i bodyn
-app.post('/register', async (req, res) => {
-    const { first_name, last_name, username, password, email } = req.body;
-    const role = 'user';
-   
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const result = await client.query(
-            'INSERT INTO users (first_name, last_name, username, password, email, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [first_name, last_name, username, hashedPassword, email, role]
-        );
-
-        console.log('User added:', result.rows[0]);
-        res.redirect('/login');
-    } catch (err) {
-        console.error('Error adding User:', err.stack);
-        res.status(500).send('Kunde inte lägga till user.');
-    }
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).send('Fel vid utloggning');
+        }
+        res.redirect("/");
+    });
 });
-
-
-app.post('/admin/update-role', async (req, res) => {
-    if (req.session.role !== 'admin') {
-        return res.status(403).send('Du har inte tillgång till denna sida.');
-    }
-
-    const { userId, role } = req.body;  // Hämta användarens ID och nya roll från formuläret
-
-    try {
-        // Hämta användarens användarnamn för att kontrollera om det är Liden119
-        const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
-        const user = userResult.rows[0];
-
-        if (user && user.username === 'Liden119') {
-            // Om användarnamnet är Liden119, tillåt inte ändring av rollen
-            return res.status(400).send('Du kan inte ändra rollen för Liden119.');
-        }
-
-        // Om användaren inte är Liden119, uppdatera rollen i databasen
-        const result = await client.query(
-            'UPDATE users SET role = $1 WHERE id = $2 RETURNING *',
-            [role, userId]
-        );
-
-        if (result.rowCount > 0) {
-            // Om användaren uppdaterades, skicka tillbaka till admin-panelen
-            res.redirect('/admin');
-        } else {
-            res.status(400).send('Kunde inte uppdatera rollen.');
-        }
-    } catch (err) {
-        console.error('Error updating role', err.stack);
-        res.status(500).send('Det gick inte att uppdatera rollen.');
-    }
-});
-
-
-app.post('/admin/update-password', async (req, res) => {
-    if (req.session.role !== 'admin') {
-        return res.status(403).send('Du har inte tillgång till denna sida.');
-    }
-
-    const { userId, password } = req.body; 
-
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Om användaren inte är Liden119, uppdatera rollen i databasen
-        const result = await client.query(
-            'UPDATE users SET password = $1 WHERE id = $2 RETURNING *',
-            [hashedPassword, userId]
-        );
-
-        if (result.rowCount > 0) {
-            // Om användaren uppdaterades, skicka tillbaka till admin-panelen
-            res.redirect('/admin');
-        } else {
-            res.status(400).send('Kunde inte uppdatera lösenordet.');
-        }
-    } catch (err) {
-        console.error('Error updating password', err.stack);
-        res.status(500).send('Det gick inte att uppdatera lösenordet.');
-    }
-});
-
-
-app.post('/admin/delete-user', async (req, res) => {
-    if (req.session.role !== 'admin') {
-        return res.status(403).send('Du har inte tillgång till denna sida.');
-    }
-
-    const { userId } = req.body;  // Hämta användarens ID från formuläret
-
-    try {
-        // Förhindra borttagning av användaren "Liden119"
-        const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
-        const user = userResult.rows[0];
-
-        if (user && user.username === 'Liden119') {
-            return res.status(400).send('Du kan inte ta bort användaren Liden119.');
-        }
-
-        // Ta bort användaren från databasen
-        const result = await client.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId]);
-
-        if (result.rowCount > 0) {
-            // Om användaren togs bort, skicka tillbaka till admin-panelen
-            res.redirect('/admin');
-        } else {
-            res.status(400).send('Kunde inte ta bort användaren.');
-        }
-    } catch (err) {
-        console.error('Error deleting user', err.stack);
-        res.status(500).send('Det gick inte att ta bort användaren.');
-    }
-});
-
-
 
 
 // Starta servern

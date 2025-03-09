@@ -1,5 +1,6 @@
 let admin = false;
 let loggedIn = false;
+let username = "Gäst";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const storesContainer = document.getElementById("stores-container");
@@ -12,6 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const loginTopbar = document.getElementById("topbar-login");
     const adminTopbar = document.getElementById("topbar-admin");
     const logoutTopbar = document.getElementById("topbar-logout");
+    const usernameTopbar = document.getElementById("username");
 
 
     // Hämta session-status och uppdatera admin-variabeln
@@ -21,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const data = await response.json();
             admin = data.isAdmin; // Uppdatera admin-variabeln
             loggedIn = data.loggedIn;
+            username = data.username;
         } catch (error) {
             console.error("Fel vid hämtning av session-status:", error);
         }
@@ -83,63 +86,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function renderAddStoreForm() {
         if (loggedIn) {
-            addStoreContainer.innerHTML = `
-                <div id="add-store-form-container" class="store-item">
-                    <h3>Lägg till en butik</h3>
-                    <form action="/add-store" method="POST">
-                        <label for="store-name">Butikens namn:</label>
-                        <input type="text" id="store-name" name="name" required><br>
-
-                        <label for="store-district">Distrikt:</label>
-                        <select id="store-district" name="district" required>
-                            <option value="Öster">Öster</option>
-                            <option value="Väster">Väster</option>
-                            <option value="Tändsticksområdet">Tändsticksområdet</option>
-                            <option value="Atollen">Atollen</option>
-                            <option value="Resecentrum">Resecentrum</option>
-                            <option value="Annat" selected>Annat</option>
-                        </select><br>
-
-                        <label for="store-category">Kategori:</label>
-                        <select id="store-category" name="category" required>
-                            <option value="kläder">Kläder & Accessoarer</option>
-                            <option value="hälsa">Hälsa</option>
-                            <option value="sportFritid">Sport & Fritid</option>
-                            <option value="livsmedel">Livsmedel</option>
-                            <option value="hemInredning">Hem & Inredning</option>
-                            <option value="kultur">Kultur</option>
-                            <option value="elektronik">Elektronik</option>
-                            <option value="blommorVäxter">Blommor & Växter</option>
-                            <option value="resorBiljetter">Resor & Biljetter</option>
-                            <option value="tjänster">Tjänster</option>
-                            <option value="spelTobak">Spel & Tobak</option>
-                            <option value="ekonomi">Ekonomi</option>
-                            <option value="godis">Godis</option>
-                            <option value="media">Media</option>
-                            <option value="övrigt" selected>Övrigt</option>
-                        </select><br>
-
-                        <label for="store-url">URL:</label>
-                        <input type="url" id="store-url" name="url" required><br>
-
-                        <button type="submit">Lägg till butik</button>
-                    </form>
-                </div>
-            `;
-        } else {
-            addStoreContainer.innerHTML = ''; // Om inte inloggad, visa inget
+            addStoreContainer.style.display = "visible";
+        } else{
+            addStoreContainer.style.display = "none";
         }
     }
 
-    function renderTopbarButtons(){
+    function renderTopbar(){
         if(loggedIn){
             registerTopbar.style.display = "none";
             loginTopbar.style.display = "none";
             logoutTopbar.style.display = "visible";
+            usernameTopbar.innerHTML = `${username}`;
         } else{
             registerTopbar.style.display = "visible";
             loginTopbar.style.display = "visible";
             logoutTopbar.style.display = "none";
+            usernameTopbar.innerHTML = "Gäst"
 
         }
 
@@ -148,12 +111,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         } else{
             adminTopbar.style.display = "none";
         }
+
     }
+
 
     filterButton.addEventListener("click", fetchStores);
 
     await checkSessionStatus(); // Hämta admin-status först
     fetchStores(); // Ladda alla butiker vid sidstart
     renderAddStoreForm();
-    renderTopbarButtons();
+    renderTopbar();
 });
