@@ -98,10 +98,8 @@ async function startServer() {
             // Försök att ansluta till databasen
             await client.connect();
             console.log('Connected to database');
-
             // Kör databassättet om anslutningen lyckas
             await setupDatabase();
-
             // Starta Express-servern efter databasanslutning
             startExpressServer();
         } catch (err) {
@@ -363,7 +361,7 @@ app.delete('/api/delete-user/:id', async (req, res) => {
         const result = await client.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId]);
 
         if (result.rowCount > 0) {
-            res.status(200).send('Användare raderad.');
+            return res.status(200).json({ message: 'Användaren har tagits bort', id: result.rows[0].id });
         } else {
             res.status(400).send('Kunde inte ta bort användaren.');
         }

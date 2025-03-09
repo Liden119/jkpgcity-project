@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <p><strong>Email:</strong> ${user.email}</p>
                     <p><strong>Roll:</strong> ${user.role}</p>
 
+                    <!-- Formulär för att ändra roll -->
                     <form id="update-role-form-${user.id}">
                         <input type="hidden" name="userId" value="${user.id}">
                         <label for="role">Ändra Roll:</label><br>
@@ -31,6 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <button type="submit" ${user.username === 'Liden119' ? 'style="display: none;"' : ''}>Ändra roll</button>
                     </form><br>
 
+                    <!-- Formulär för att ta bort användare -->
                     <form id="delete-form-${user.id}" class="delete-form">
                         <input type="hidden" name="userId" value="${user.id}">
                         <label for="delete">Radera användare</label><br>
@@ -42,15 +44,50 @@ document.addEventListener("DOMContentLoaded", async () => {
                 userListContainer.appendChild(userCard);
             });
 
+            // Efter att användarna renderats, sätt event-lyssnare för ändra roll-knappar
+            const updateRoleForms = document.querySelectorAll('form[id^="update-role-form-"]');
+            updateRoleForms.forEach(form => {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();  // Förhindra att formuläret skickas traditionellt
+
+                    const userId = form.querySelector('input[name="userId"]').value;
+                    const role = form.querySelector(`#role-${userId}`).value; // Hämta den valda rollen
+
+                    try {
+                        const response = await fetch('/api/update-role', {
+                            method: 'PUT',  // PUT request
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ userId, role }),  // Skicka userId och role som JSON
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log("Rollen uppdaterad:", result);
+                            window.location.href = "/admin"; //reload page
+                        } else {
+                            const error = await response.text();
+                            alert('Fel vid uppdatering: ' + error);
+                        }
+                    } catch (error) {
+                        console.error('Fel vid uppdatering av roll:', error);
+                        alert('Det gick inte att uppdatera rollen.');
+                    }
+                });
+            });
+
             // Efter att användarna renderats, sätt event-lyssnare för delete-knappar
             const deleteButtons = document.querySelectorAll('.delete-button');
             deleteButtons.forEach(button => {
                 button.addEventListener('click', async (event) => {
                     const userId = event.target.dataset.userId;
+                    console.log(`Deleting user with ID: ${userId}`);  // Logga användar-ID
+                
                     const confirmDelete = confirm('Är du säker på att du vill ta bort denna användare?');
-
+                
                     if (!confirmDelete) return;
-
+                
                     try {
                         const response = await fetch(`/api/delete-user/${userId}`, {
                             method: 'DELETE',
@@ -58,58 +95,27 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 'Content-Type': 'application/json',
                             },
                         });
-
+                
                         if (response.ok) {
                             const result = await response.json();
                             console.log("Användaren borttagen:", result);
-                            window.location.href = "/admin";  // Redirect to home page
+                            window.location.href = "/admin"; //reload page
                         } else {
                             const errorText = await response.text();
+                            console.error(`Fel från servern: ${errorText}`);  // Logga serverns felmeddelande
                             alert(`Fel: ${errorText}`);
                         }
                     } catch (error) {
                         console.error('Fel vid borttagning:', error);
                         alert('Det gick inte att ta bort användaren.');
                     }
-                });
+                });                
             });
 
         } catch (error) {
             console.error("Fel vid hämtning av användare:", error);
             alert("Det gick inte att hämta användarna.");
         }
-        const updateRoleForms = document.querySelectorAll('form[id^="update-role-form-"]');
-    
-        updateRoleForms.forEach(form => {
-            form.addEventListener('submit', async (event) => {
-                event.preventDefault();  // Förhindra att formuläret skickas traditionellt
-
-                const userId = form.querySelector('input[name="userId"]').value;
-                const role = form.querySelector(`#role-${userId}`).value; // Hämta den valda rollen
-
-                try {
-                    const response = await fetch('/api/update-role', {
-                        method: 'PUT',  // PUT request
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ userId, role }),  // Skicka userId och role som JSON
-                    });
-
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log("Rollen uppdaterad:", result);
-                        window.location.href = "/admin";  // Redirect to home page
-                    } else {
-                        const error = await response.text();
-                        alert('Fel vid uppdatering: ' + error);
-                    }
-                } catch (error) {
-                    console.error('Error updating role:', error);
-                    alert('Det gick inte att uppdatera rollen.');
-                }
-            });
-        });
     }
 
     // Hämta användarna när sidan är klar
