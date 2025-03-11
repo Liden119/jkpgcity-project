@@ -16,11 +16,6 @@ const storeId = path.split('/').pop();
     
         try {
             const response = await fetch(url);
-    
-            if (!response.ok) {
-                throw new Error("Misslyckades med att hämta butikens data.");
-            }
-    
             const store = await response.json();
             return store;
         } catch (error) {

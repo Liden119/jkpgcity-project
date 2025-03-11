@@ -1,33 +1,33 @@
-version: '3.8'
+version: '3.8'  # Definierar vilken version av Docker Compose syntaxen följer
 
 services:
   database:
     build:
-      context: .
-      dockerfile: Dockerfile.database  # Bygger från din custom Dockerfile
-    container_name: postgres_db
-    restart: always
+      context: .  # Använder nuvarande katalog
+      dockerfile: Dockerfile.database  # Bygger från en specifik Dockerfile
+    container_name: postgres_db  # Namn på containern
+    restart: always  # Containern startas om om den kraschar
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      - "5432:5432"  # Kartlägger port 5432 från containern till host-maskinen
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data  # Sparar databasdata även efter omstart
 
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend  # Bygger frontend från din frontend-Dockerfile
-    container_name: node_frontend
-    restart: always
+      context: .  
+      dockerfile: Dockerfile.frontend  
+    container_name: node_frontend  
+    restart: always  
     ports:
-      - "8080:8080"
+      - "8080:8080"  # Exponerar frontend-appen på port 8080
     depends_on:
-      - database
+      - database  # Säkerställer att databasen startas först
     environment:
-      DATABASE_URL: "postgres://postgres:12345@database:5432/postgres"
+      DATABASE_URL: "postgres://postgres:12345@database:5432/postgres"  # URL för att ansluta till databasen
 
 volumes:
-  db_data:
+  db_data:  # Skapar en volym för databaslagring

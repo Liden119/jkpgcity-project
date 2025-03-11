@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await fetch(url);
             const data = await response.json();
+
             renderStores(data.stores);
         } catch (error) {
             console.error("Fel vid hämtning av butiker:", error);
@@ -74,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             storeItem.classList.add("store-item");
 
             storeItem.innerHTML = `
-                <h3 class="store-header">${store.name}</h3>
+                <h3 class="store-header">${stores.name}</h3>
                 <h4 class="store-district">Distrikt: ${store.district}</h4>
                 <img src="/img/${icon}" alt="${store.category} icon" class="store-icon">
                 <a href="https://${store.url}" target="_blank" class="visit-button">Läs mer</a>
@@ -103,17 +104,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             loginTopbar.style.display = "visible";
             logoutTopbar.style.display = "none";
             usernameTopbar.innerHTML = "Gäst"
-
         }
-
         if(admin){
             adminTopbar.style.display = "visible";
         } else{
             adminTopbar.style.display = "none";
         }
-
     }
-
 
     filterButton.addEventListener("click", fetchStores);
 

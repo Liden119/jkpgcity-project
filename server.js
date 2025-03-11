@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
 let client;  // Global variabel för klienten
+const PORT = 8080;
 
 
 // Skapa tabeller
@@ -112,7 +113,7 @@ async function startServer() {
 
     // Starta Express-servern
     function startExpressServer() {
-        app.listen(8080, () => {
+        app.listen(PORT, () => {
             console.log('Server listening on port 8080!');
         });
     }
@@ -129,6 +130,32 @@ app.use(session({
     resave: false,  
     saveUninitialized: false,  
 }));
+
+
+/* GET REQUESTS TO SERVE DIFFERENT STATIC HTML FILES */
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+app.get('/edit-store/:storeId', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+
+ res.sendFile(path.join(__dirname, 'public', 'edit-store.html'));
+});
+app.get('/admin', async (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).send('Du har inte tillgång till denna sida.');
+    }
+res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 
 /* API REQUEST/RESPONSES TO SERVE STORE/STORES FROM DATABASE IN FETCH */
 // --------------------------------------
@@ -370,32 +397,6 @@ app.delete('/api/delete-user/:id', async (req, res) => {
         res.status(500).send('Det gick inte att ta bort användaren.');
     }
 });
-
-
-/* GET REQUESTS TO SERVE DIFFERENT STATIC HTML FILES */
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'register.html'));
-});
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-app.get('/edit-store/:storeId', async (req, res) => {
-    if (req.session.role !== 'admin') {
-        return res.status(403).send('Du har inte tillgång till denna sida.');
-    }
-
- res.sendFile(path.join(__dirname, 'public', 'edit-store.html'));
-});
-app.get('/admin', async (req, res) => {
-    if (req.session.role !== 'admin') {
-        return res.status(403).send('Du har inte tillgång till denna sida.');
-    }
-res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
 
 //Login and Logout
 app.post('/login', async (req, res) => {
