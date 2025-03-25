@@ -5,9 +5,9 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
+const cookieParser = require('cookie-parser'); 
 let client;  // Global variabel för klienten
 const PORT = 8080;
-
 
 // Skapa tabeller
 async function createTables() {
@@ -105,7 +105,7 @@ async function startServer() {
             startExpressServer();
         } catch (err) {
             console.error('Database connection failed, retrying in 5 seconds...', err);
-            setTimeout(connectWithRetry, 5000);  // Försök igen om 5 sekunder
+            setTimeout(connectWithRetry, 5000);
         }
     };
 
@@ -130,6 +130,8 @@ app.use(session({
     resave: false,  
     saveUninitialized: false,  
 }));
+
+app.use(cookieParser());
 
 
 /* GET REQUESTS TO SERVE DIFFERENT STATIC HTML FILES */
@@ -240,7 +242,6 @@ app.post('/api/add-store', async (req, res) => {
         return res.status(403).send('Du måste vara inloggad för att lägga till en butik.');
     }
 
-    
     try {
         const result = await client.query(
             'INSERT INTO stores (name, district, category, url) VALUES ($1, $2, $3, $4) RETURNING *',
@@ -413,6 +414,15 @@ app.post('/login', async (req, res) => {
                 req.session.loggedIn = true;
                 req.session.username = username;
                 req.session.role = user.role;  // Sätt användarens roll i sessionen
+
+                res.cookie("userSession", username, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: "Strict",
+                    maxAge: 3600000,
+                  });
+                  
+
                 res.redirect('/');
             } else {
                 res.redirect("/login");
@@ -426,12 +436,23 @@ app.post('/login', async (req, res) => {
     }
 });
 app.get('/logout', (req, res) => {
+    res.clearCookie('userSession'); // Tar bort cookien
     req.session.destroy((err) => {
         if (err) {
             return res.status(500).send('Fel vid utloggning');
         }
         res.redirect("/");
     });
+});
+
+app.get('/check-cookie', (req, res) => {
+    const userSession = req.cookies.userSession;
+
+    if (userSession) {
+        res.send(`User logged in as: ${userSession}`);
+    } else {
+        res.send('Ingen inloggad användare.');
+    }
 });
 
 

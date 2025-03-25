@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             storeItem.classList.add("store-item");
 
             storeItem.innerHTML = `
-                <h3 class="store-header">${stores.name}</h3>
+                <h3 class="store-header">${store.name}</h3>
                 <h4 class="store-district">Distrikt: ${store.district}</h4>
                 <img src="/img/${icon}" alt="${store.category} icon" class="store-icon">
                 <a href="https://${store.url}" target="_blank" class="visit-button">Läs mer</a>
